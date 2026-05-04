@@ -1,0 +1,9 @@
+{
+	"nodes":[
+		{"id":"eeb8b52b0c24127c","type":"file","file":"Pasted image 20240521185149.png","x":-580,"y":-980,"width":400,"height":203},
+		{"id":"fdf69c5d3e4b7b58","type":"text","text":"[[Matrix]] (Testar em vários ambientes e versões)","x":-710,"y":-660,"width":260,"height":80}
+	],
+	"edges":[
+		{"id":"c95b67edbdce061d","fromNode":"eeb8b52b0c24127c","fromSide":"bottom","toNode":"fdf69c5d3e4b7b58","toSide":"top"}
+	]
+}

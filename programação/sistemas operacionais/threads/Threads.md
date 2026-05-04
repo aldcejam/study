@@ -1,0 +1,2 @@
+Vantagem sob threads de usuário pois a Thread reconhecida pelo próprio Kernel age como um processo, ou seja, ele é escolhido para ser executado pelo escalonador tal como um processo, logo, caso em uma thread ocorra a necessidade de requerer um dado no hd, apenas está thread entrará em espera, as outras threads do processo serão executadas em paralelo, sem entrar em espera por causa de uma outa thread.
+-  _“Cada thread de kernel tem seu próprio contexto de execução e pode ser escolhida individualmente pelo escalonador, assim como processos são.”_

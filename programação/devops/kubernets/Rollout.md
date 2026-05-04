@@ -1,0 +1,2 @@
+- **Verificar histórico:** `kubectl rollout history deploymnet -matadadoName-`  
+- Voltar versão anterior de todos os pods: `kubectl rollout undo deployment goserver`
