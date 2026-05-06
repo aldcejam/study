@@ -1,7 +1,3 @@
----
-
----
-
 ## Clock
 - O que é
 > Determina a frequência em que o processador executa tarefas, ou seja, se o `Clock` do processador for 3 GHz (unidade padrão), este poderá executar 3 bilhões de ciclos de clock por segundo. Logo, em teoria, quanto maior a frequência de clock maior é a capacidade do processador de executar tarefas.

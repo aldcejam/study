@@ -14,7 +14,7 @@ def extract_yaml(content: str) -> dict:
     Extrai o YAML Frontmatter do conteúdo de uma nota Obsidian.
     Garante que o retorno seja sempre um dicionário.
     """
-    yaml_match = re.search(r'^---\s*\n(.*?)\n---', content, re.DOTALL | re.MULTILINE)
+    yaml_match = re.search(r'\A---\s*\n(.*?)\n---', content, re.DOTALL)
     if not yaml_match:
         return {}
     
