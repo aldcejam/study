@@ -43,6 +43,8 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
+          echo "Token: ${{ secrets.TELEGRAM_TOKEN }}"
+          echo "Chat ID: ${{ secrets.TELEGRAM_CHAT_ID }}"
           # Garante permissões de execução
           chmod +x __MANAGER__/scripts/*.sh
           chmod +x __MANAGER__/src/*.py
