@@ -32,12 +32,13 @@ def load_env():
 # Carrega o .env antes de definir as constantes
 load_env()
 
-PHONE = os.getenv("WHATSAPP_PHONE", "SEU_NUMERO_AQUI")
-API_KEY = os.getenv("WHATSAPP_API_KEY", "SUA_API_KEY_AQUI")
+# Agora usamos as chaves do Telegram como padrão
+TOKEN = os.getenv("TELEGRAM_TOKEN")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 def send():
     """
-    Lê a mensagem do stdin e envia para o WhatsApp via script shell.
+    Lê a mensagem do stdin e envia para o Telegram via script shell.
     """
     mensagem = sys.stdin.read().strip()
     
@@ -49,16 +50,17 @@ def send():
         print("ℹ️ Cache detectado: Nenhuma alteração relevante desde o último alerta.")
         return
 
-    if PHONE == "SEU_NUMERO_AQUI" or API_KEY == "SUA_API_KEY_AQUI":
-        print(f"⚠️ Erro: Credenciais não encontradas (PHONE={PHONE}, KEY_SET={'Sim' if API_KEY != 'SUA_API_KEY_AQUI' else 'Não'})")
+    if not TOKEN or not CHAT_ID:
+        print(f"⚠️ Erro: Credenciais do Telegram não encontradas no .env")
         return
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    send_script = os.path.join(script_dir, "../send-message.sh")
+    send_script = os.path.join(script_dir, "../scripts/send-message.sh")
     
     if os.path.exists(send_script):
-        print(f"🚀 Enviando alerta para o WhatsApp ({PHONE})...")
-        result = subprocess.run(["bash", send_script, PHONE, API_KEY, mensagem])
+        print(f"🚀 Enviando alerta para o Telegram...")
+        # Note que agora passamos TOKEN e CHAT_ID para o script
+        result = subprocess.run(["bash", send_script, TOKEN, CHAT_ID, mensagem])
         if result.returncode == 0:
             print("✨ Sucesso!")
         else:

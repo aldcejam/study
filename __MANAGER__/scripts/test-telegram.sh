@@ -2,8 +2,8 @@
 # 🤖 Script de teste para envio de mensagens via Telegram
 
 # Carrega variáveis do arquivo .env
-if [ -f "$(dirname "$0")/../.env" ]; then
-    export $(grep -v '^#' "$(dirname "$0")/../.env" | xargs)
+if [ -f "$(dirname "$0")/../../.env" ]; then
+    export $(grep -v '^#' "$(dirname "$0")/../../.env" | xargs)
 fi
 
 TOKEN=$TELEGRAM_TOKEN

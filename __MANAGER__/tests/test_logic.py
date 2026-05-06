@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta, timezone
 
 # Adiciona o diretório do gerador ao sys.path para importar os módulos
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../study-metadata-generator')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
 from scanner import extract_yaml
 from processor import parse_date, generate_id

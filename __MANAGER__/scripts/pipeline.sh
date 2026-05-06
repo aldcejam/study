@@ -14,11 +14,11 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 echo -e "${BLUE} iniciando Pipeline de Estudos (Engine V2)...${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-# Execução em Pipe chamando os scripts na pasta 'engine'
-python3 study-metadata-generator/scanner.py | \
-python3 study-metadata-generator/processor.py | \
-python3 study-metadata-generator/exporter.py | \
-python3 study-metadata-generator/notifier.py
+# Execução em Pipe chamando os scripts na pasta 'src'
+python3 ../src/scanner.py | \
+python3 ../src/processor.py | \
+python3 ../src/exporter.py | \
+python3 ../src/notifier.py
 
 echo ""
 echo "✨ Processo concluído!"

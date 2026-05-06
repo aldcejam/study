@@ -14,13 +14,13 @@ def test_full_pipeline_flow(tmp_path):
     test_vault.mkdir()
     manager_dir = test_vault / "__MANAGER__"
     manager_dir.mkdir()
-    engine_dir = manager_dir / "study-metadata-generator"
+    engine_dir = manager_dir / "src"
     engine_dir.mkdir()
     output_dir = manager_dir / "output"
     output_dir.mkdir()
     
     # Copia os scripts da pasta geradora real para a pasta de teste
-    src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../study-metadata-generator'))
+    src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../src'))
     for script in ["scanner.py", "processor.py", "exporter.py", "models.py"]:
         shutil.copy(os.path.join(src_dir, script), engine_dir)
     
