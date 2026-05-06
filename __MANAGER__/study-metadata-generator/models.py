@@ -16,7 +16,11 @@ class NoteMetadata(TypedDict):
     revisoes: List[Revision]
     tags: List[str]
     references: List[Reference]
+    activity: Optional[str]
+    updatedAt: str # Data da última alteração via Git (ISO)
 
 class ProcessedNote(NoteMetadata):
+    id: str # Identificador único: caminho + data_revisao
     dias_atraso: int
     status_revisao: str  # "ATRASADA", "HOJE", "FUTURA"
+    last_notified_at: Optional[str] # Data do último alerta enviado (ISO)

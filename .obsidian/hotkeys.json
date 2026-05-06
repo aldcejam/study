@@ -1,0 +1,11 @@
+{
+  "open-in-terminal:open-terminal": [
+    {
+      "modifiers": [
+        "Mod",
+        "Shift"
+      ],
+      "key": "G"
+    }
+  ]
+}

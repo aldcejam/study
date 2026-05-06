@@ -1,0 +1,15 @@
+.obsidian/workspace.json
+/.obsidian/workspace.json
+./.obsidian/workspace.json
+# Cache de metadados (necessário para persistência no GitHub Actions)
+!__MANAGER__/output/
+!__MANAGER__/output/*.json
+.smart-env
+./.smart-env
+.pytest_cache/
+*/__pycache__
+
+
+# Ignore Smart Environment folder
+.smart-env
+.env
