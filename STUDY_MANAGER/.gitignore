@@ -1,0 +1,12 @@
+# 🔍 Dados de inspeção por execução (apagados no início de cada run)
+debug/
+
+# 📁 Binários compilados
+bin/
+
+# 📋 Cache de estado persistente gerado em runtime
+output/
+
+# 🐹 Go cache e artefatos
+*.test
+*.out
