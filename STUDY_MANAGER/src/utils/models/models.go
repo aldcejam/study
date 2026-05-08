@@ -12,8 +12,8 @@ type Reference struct {
 	Source      string `json:"source"`
 }
 
-// NoteMetadata é a saída do scanner: metadados brutos de uma nota.
-type NoteMetadata struct {
+// ScannerOutput é a saída do scanner: metadados brutos de uma nota.
+type ScannerOutput struct {
 	Filename     string      `json:"filename"`
 	RelativePath string      `json:"relative_path"`
 	Tema         string      `json:"tema"`
@@ -21,13 +21,14 @@ type NoteMetadata struct {
 	Revisoes     []Revision  `json:"revisoes"`
 	Tags         []string    `json:"tags"`
 	References   interface{} `json:"references"` // string ou {description, source}
+	Homework     interface{} `json:"homework"`   // string, list of strings or list of maps
 	Activity     *string     `json:"activity"`
 	UpdatedAt    string      `json:"updatedAt"` // ISO 8601
 }
 
-// ProcessedNote é a saída do processor: nota com status calculado.
-type ProcessedNote struct {
-	NoteMetadata
+// SummaryNotificationOutput é a estrutura interna gerada para os itens a notificar.
+type SummaryNotificationOutput struct {
+	ScannerOutput
 	ID             string  `json:"id"`
 	DiasAtraso     int     `json:"dias_atraso"`
 	StatusRevisao  string  `json:"status_revisao"` // ATRASADA, HOJE, FUTURA, EM_DIA

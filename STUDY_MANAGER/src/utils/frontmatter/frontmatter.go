@@ -49,7 +49,16 @@ func ParseSimple(yamlStr string) map[string]interface{} {
 		if strings.HasPrefix(trimmed, "- ") {
 			val := strings.TrimPrefix(trimmed, "- ")
 			val = unquote(val)
-			listItems = append(listItems, val)
+
+			// Se o item da lista contiver ":", tentamos tratar como um mapa simples (ex: - link_1: url)
+			if idx := strings.Index(val, ":"); idx > 0 {
+				k := strings.TrimSpace(val[:idx])
+				v := strings.TrimSpace(val[idx+1:])
+				listItems = append(listItems, map[string]interface{}{k: unquote(v)})
+			} else {
+				listItems = append(listItems, val)
+			}
+
 			inList = true
 			continue
 		}

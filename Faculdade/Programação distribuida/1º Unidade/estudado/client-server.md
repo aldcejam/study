@@ -3,8 +3,11 @@ tema: Arquitetura Client-Server
 revision_18-04-2026: true
 revision_22-04-2026: false
 references:
-  - "tal_coisa: link"
-  - tal_coisa_la:relative_path
+  - link_1: https://google.com
+  - path_1: ./references/client-server-referencia.pdf
+homework:
+  - path_1: ./homework/client-server-tarefa.md
+  - path_1: ./homework/client-server-tarefa.md
 ---
 ## 🧠 Processo de Aprendizado
 

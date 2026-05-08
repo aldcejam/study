@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"study_manager/internal/frontmatter"
-	"study_manager/internal/models"
+	"study_manager/src/utils/frontmatter"
+	"study_manager/src/utils/models"
 )
 
 // ignoredDirs são pastas que devem ser ignoradas ao varrer o vault.
@@ -93,8 +93,8 @@ func generateID(path, filename, revDate string) string {
 
 // scanNotes executa a varredura recursiva do diretório base, filtrando arquivos Markdown
 // e extraindo seus metadados apenas se seguirem o padrão esperado (primeiro atributo 'tema').
-func scanNotes(baseDir string) ([]models.NoteMetadata, error) {
-	var notes []models.NoteMetadata
+func scanNotes(baseDir string) ([]models.ScannerOutput, error) {
+	var notes []models.ScannerOutput
 
 	err := filepath.WalkDir(baseDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -164,7 +164,12 @@ func scanNotes(baseDir string) ([]models.NoteMetadata, error) {
 			refs = r
 		}
 
-		note := models.NoteMetadata{
+		var hw interface{} = []interface{}{}
+		if h, ok := fm["homework"]; ok && h != nil {
+			hw = h
+		}
+
+		note := models.ScannerOutput{
 			Filename:     d.Name(),
 			RelativePath: relPath,
 			Tema:         tema,
@@ -172,6 +177,7 @@ func scanNotes(baseDir string) ([]models.NoteMetadata, error) {
 			Revisoes:     parseRevisions(fm),
 			Tags:         tags,
 			References:   refs,
+			Homework:     hw,
 			Activity:     strOrNil(fm["activity"]),
 			UpdatedAt:    getGitUpdatedAt(path),
 		}

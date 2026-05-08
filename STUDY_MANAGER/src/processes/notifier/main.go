@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"study_manager/internal/dotenv"
+	"study_manager/src/utils/dotenv"
 )
 
 func loadEnv() {
