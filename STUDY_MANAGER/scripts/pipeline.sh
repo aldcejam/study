@@ -44,21 +44,21 @@ go build -o bin/exporter  ./cmd/exporter
 go build -o bin/notifier  ./cmd/notifier
 echo -e "${GREEN}✔  Compilação concluída.${NC}"
 
-# 2. Pasta debug: apaga e recria do zero a cada execução
-DEBUG_DIR="./debug"
-rm -rf "$DEBUG_DIR"
-mkdir -p "$DEBUG_DIR"
+# 2. Pasta de rastreio: limpa e recria para novos arquivos de saída
+TRACE_DIR="./trace"
+rm -rf "$TRACE_DIR"
+mkdir -p "$TRACE_DIR"
 
-# 3. Execução com tee — cada estágio salva sua saída antes de repassar
+# 3. Execução da pipeline com salvamento dos outputs intermediários
 echo -e "${BLUE}▶  Executando pipeline...${NC}"
 ./bin/scanner \
-    | tee "$DEBUG_DIR/01_scanner.json" \
+    | tee "$TRACE_DIR/01_scanner.json" \
     | ./bin/processor \
-    | tee "$DEBUG_DIR/02_processor.json" \
+    | tee "$TRACE_DIR/02_processor.json" \
     | ./bin/exporter \
-    | tee "$DEBUG_DIR/03_exporter.txt" \
+    | tee "$TRACE_DIR/03_exporter.txt" \
     | ./bin/notifier
 
 echo ""
 echo -e "${GREEN}✨ Processo concluído!${NC}"
-echo -e "${BLUE}🔍 Dados de cada estágio salvos em: ${DEBUG_DIR}/${NC}"
+echo -e "${BLUE}📄 Arquivos de rastreio gerados em: ${TRACE_DIR}/${NC}"

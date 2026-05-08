@@ -1,5 +1,5 @@
-# 🔍 Dados de inspeção por execução (apagados no início de cada run)
-debug/
+# 📄 Arquivos de rastreio por execução (apagados no início de cada run)
+trace/
 
 # 📁 Binários compilados
 bin/

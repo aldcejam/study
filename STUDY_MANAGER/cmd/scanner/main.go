@@ -18,6 +18,8 @@ import (
 // ignoredDirs são pastas que devem ser ignoradas ao varrer o vault.
 var ignoredDirs = []string{"STUDY_MANAGER", "__MANAGER__", ".obsidian", ".git", ".agents", ".gemini"}
 
+// shouldIgnore verifica se o caminho informado pertence a uma lista de diretórios
+// que devem ser ignorados durante a varredura do vault (ex: .git, .obsidian).
 func shouldIgnore(path string) bool {
 	for _, ignored := range ignoredDirs {
 		if strings.Contains(path, ignored) {
@@ -27,8 +29,11 @@ func shouldIgnore(path string) bool {
 	return false
 }
 
-// getGitUpdatedAt retorna a data do último commit que tocou o arquivo.
-// Faz fallback para mtime e depois para epoch se tudo falhar.
+// getGitUpdatedAt recupera a data da última alteração do arquivo registrada no Git.
+//
+// O comando tenta obter o timestamp via 'git log' no formato ISO 8601.
+// Em caso de falha (arquivo não versionado ou erro), utiliza o mtime do sistema de arquivos.
+// Como fallback final, retorna a época Unix (1970-01-01).
 func getGitUpdatedAt(filepath string) string {
 	cmd := exec.Command("git", "log", "-1", "--format=%cI", "--", filepath)
 	out, err := cmd.Output()
@@ -48,7 +53,8 @@ func getGitUpdatedAt(filepath string) string {
 	return "1970-01-01T00:00:00Z"
 }
 
-// parseRevisions extrai pares revision_DD-MM-YYYY: true/false do frontmatter.
+// parseRevisions processa o map do frontmatter em busca de chaves no formato
+// 'revision_DD-MM-YYYY' e as converte para uma lista de modelos Revision.
 func parseRevisions(fm map[string]interface{}) []models.Revision {
 	var revs []models.Revision
 	for key, val := range fm {
@@ -65,7 +71,8 @@ func parseRevisions(fm map[string]interface{}) []models.Revision {
 	return revs
 }
 
-// strOrNil converte interface{} para *string, retornando nil se vazio ou nil.
+// strOrNil é uma função utilitária que converte uma interface para um ponteiro de string.
+// Retorna nil caso o valor seja nulo, não seja uma string ou seja uma string vazia.
 func strOrNil(v interface{}) *string {
 	if v == nil {
 		return nil
@@ -77,12 +84,15 @@ func strOrNil(v interface{}) *string {
 	return &s
 }
 
-// generateID gera um hash MD5 de 12 caracteres para identificar unicamente uma nota.
+// generateID cria um identificador único de 12 caracteres (MD5 truncado)
+// baseado no caminho do arquivo, nome e data de revisão para rastreamento.
 func generateID(path, filename, revDate string) string {
 	h := md5.Sum([]byte(fmt.Sprintf("%s/%s@%s", path, filename, revDate)))
 	return fmt.Sprintf("%x", h)[:12]
 }
 
+// scanNotes executa a varredura recursiva do diretório base, filtrando arquivos Markdown
+// e extraindo seus metadados apenas se seguirem o padrão esperado (primeiro atributo 'tema').
 func scanNotes(baseDir string) ([]models.NoteMetadata, error) {
 	var notes []models.NoteMetadata
 
@@ -103,6 +113,28 @@ func scanNotes(baseDir string) ([]models.NoteMetadata, error) {
 		}
 
 		raw := frontmatter.Extract(string(content))
+		if raw == "" {
+			return nil
+		}
+
+		// Validação: o primeiro atributo deve ser "tema"
+		lines := strings.Split(raw, "\n")
+		isFirstTema := false
+		for _, line := range lines {
+			trimmed := strings.TrimSpace(line)
+			if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+				continue
+			}
+			if strings.HasPrefix(trimmed, "tema:") {
+				isFirstTema = true
+			}
+			break
+		}
+
+		if !isFirstTema {
+			return nil
+		}
+
 		fm := frontmatter.ParseSimple(raw)
 
 		relPath, _ := filepath.Rel(baseDir, filepath.Dir(path))
