@@ -10,16 +10,6 @@ homework:
   - path_1: ./homework/client-server-tarefa.md
 ---
 ## 🧠 Processo de Aprendizado
-
-<!-- TABLE:LEARNING -->
-| ID | Tarefa                       | Tipo     | Data       | Status  |
-| -- | ---------------------------- | -------- | ---------- | ------- |
-| T1 | Ler material sobre CS        | estudo   | 15/03/26   | done    |
-| T2 | Criar resumo próprio         | produção | 16/03/26   | pending |
-| T3 | Explicação em voz            | feynman  | 18/03/26   | pending |
-| T4 | Teste de recuperação ativa   | recall   | 22/03/26   | pending |
-<!-- /TABLE:LEARNING -->
-
 ---
 
 ## 📝 Meu Resumo (Feynman)
