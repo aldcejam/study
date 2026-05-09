@@ -34,20 +34,21 @@ func shouldIgnore(path string) bool {
 // O comando tenta obter o timestamp via 'git log' no formato ISO 8601.
 // Em caso de falha (arquivo não versionado ou erro), utiliza o mtime do sistema de arquivos.
 // Como fallback final, retorna a época Unix (1970-01-01).
-func getGitUpdatedAt(filepath string) string {
-	cmd := exec.Command("git", "log", "-1", "--format=%cI", "--", filepath)
+func getGitUpdatedAt(filePath string) string {
+	// Prioridade: mtime do sistema (mais fiel a edições locais)
+	info, err := os.Stat(filePath)
+	if err == nil {
+		return info.ModTime().Format(time.RFC3339)
+	}
+
+	// Fallback: Git log
+	cmd := exec.Command("git", "log", "-1", "--format=%cI", "--", filePath)
 	out, err := cmd.Output()
 	if err == nil {
 		result := strings.TrimSpace(string(out))
 		if result != "" {
 			return result
 		}
-	}
-
-	// Fallback: mtime
-	info, err := os.Stat(filepath)
-	if err == nil {
-		return info.ModTime().Format(time.RFC3339)
 	}
 
 	return "1970-01-01T00:00:00Z"

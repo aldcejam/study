@@ -16,6 +16,7 @@ type Reference struct {
 type ScannerOutput struct {
 	Filename     string      `json:"filename"`
 	RelativePath string      `json:"relative_path"`
+	ShortID      string      `json:"short_id"`
 	Tema         string      `json:"tema"`
 	Subtema      *string     `json:"subtema"`
 	Revisoes     []Revision  `json:"revisoes"`

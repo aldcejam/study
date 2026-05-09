@@ -26,7 +26,7 @@ func sendTelegram(token, chatID, message string) error {
 	resp, err := http.PostForm(apiURL, url.Values{
 		"chat_id":    {chatID},
 		"text":       {message},
-		"parse_mode": {"Markdown"},
+		"parse_mode": {"HTML"},
 	})
 	if err != nil {
 		return fmt.Errorf("erro de rede: %w", err)

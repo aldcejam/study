@@ -6,11 +6,33 @@ import (
 	"net/http"
 	"os"
 
+	"os/exec"
+	"time"
+
 	"study_manager/src/utils/dotenv"
 )
 
 func main() {
 	dotenv.Load(".env", "../.env", "../../.env")
+
+	// Ticker para rodar o pipeline de resumo a cada 5s (Teste de Otimização)
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			log.Println("🔄 [Background] Rodando pipeline de notificação...")
+			cmd := exec.Command("go", "run", "./src/pipelines/notifySummary/main.go")
+			// Define o CWD para a raiz do projeto para o go run funcionar
+			cmd.Dir = "." 
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				log.Printf("❌ [Background] Erro no pipeline: %v\n%s", err, string(output))
+			} else {
+				log.Println("✅ [Background] Pipeline finalizado.")
+			}
+		}
+	}()
 	
 	token := os.Getenv("TELEGRAM_TOKEN")
 	if token == "" {
