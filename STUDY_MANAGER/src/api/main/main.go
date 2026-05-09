@@ -17,13 +17,13 @@ func main() {
 
 	// Ticker para rodar o pipeline de resumo a cada 5s (Teste de Otimização)
 	go func() {
-		ticker := time.NewTicker(5 * time.Second)
+		ticker := time.NewTicker(1 * time.Hour)
 		defer ticker.Stop()
 
 		for range ticker.C {
 			log.Println("🔄 [Background] Rodando pipeline de notificação...")
-			cmd := exec.Command("go", "run", "./src/pipelines/notifySummary/main.go")
-			// Define o CWD para a raiz do projeto para o go run funcionar
+			cmd := exec.Command("./bin/pipeline")
+			// Define o CWD para a raiz do projeto
 			cmd.Dir = "." 
 			output, err := cmd.CombinedOutput()
 			if err != nil {

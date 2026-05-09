@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
 const (
@@ -18,7 +17,6 @@ const (
 func main() {
 	header()
 
-	// 1. Execute pipeline
 	if err := executePipeline(); err != nil {
 		fatal("Erro na execução do pipeline: %v", err)
 	}
@@ -32,68 +30,57 @@ func header() {
 	fmt.Printf("%s━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%s\n", ColorBlue, ColorReset)
 }
 
-
-
 func executePipeline() error {
 	fmt.Printf("%s▶  Executando pipeline...%s\n", ColorBlue, ColorReset)
 
-	// Define the commands
-	scanner := exec.Command("./bin/scanner")
-	summary := exec.Command("./bin/summaryNotification")
-	notifier := exec.Command("./bin/notifier")
+	// No modo imutável, usamos os binários que estão na pasta /app/bin/
+	scannerCmd := exec.Command("./bin/scanner")
+	summaryCmd := exec.Command("./bin/summaryNotification")
+	notifierCmd := exec.Command("./bin/notifier")
 
-	// Chain: scanner -> summaryNotification -> notifier
-
-	// Scanner Out -> Summary In
+	// Pipeline: Scanner -> SummaryNotification
 	pr1, pw1 := io.Pipe()
-	scanner.Stdout = pw1
-	summary.Stdin = pr1
+	scannerCmd.Stdout = pw1
+	summaryCmd.Stdin = pr1
 
-	// Summary Out -> Notifier In
+	// Pipeline: SummaryNotification -> Notifier
 	pr2, pw2 := io.Pipe()
-	summary.Stdout = pw2
-	notifier.Stdin = pr2
+	summaryCmd.Stdout = pw2
+	notifierCmd.Stdin = pr2
 
-	// Final output to stdout
-	notifier.Stdout = os.Stdout
-	notifier.Stderr = os.Stderr
+	notifierCmd.Stdout = os.Stdout
+	scannerCmd.Stderr = os.Stderr
+	summaryCmd.Stderr = os.Stderr
+	notifierCmd.Stderr = os.Stderr
 
-	// Collect errors
-	scanner.Stderr = os.Stderr
-	summary.Stderr = os.Stderr
-
-	// Start all
-	if err := scanner.Start(); err != nil {
-		return err
+	if err := scannerCmd.Start(); err != nil {
+		return fmt.Errorf("falha ao iniciar scanner: %v", err)
 	}
-	if err := summary.Start(); err != nil {
-		return err
+	if err := summaryCmd.Start(); err != nil {
+		return fmt.Errorf("falha ao iniciar summary: %v", err)
 	}
-	if err := notifier.Start(); err != nil {
-		return err
+	if err := notifierCmd.Start(); err != nil {
+		return fmt.Errorf("falha ao iniciar notifier: %v", err)
 	}
 
-	// Wait in order
-	if err := scanner.Wait(); err != nil {
-		pw1.Close()
-		return fmt.Errorf("scanner: %v", err)
-	}
+	errScanner := scannerCmd.Wait()
 	pw1.Close()
-
-	if err := summary.Wait(); err != nil {
-		pw2.Close()
-		return fmt.Errorf("summaryNotification: %v", err)
+	if errScanner != nil {
+		return fmt.Errorf("scanner error: %v", errScanner)
 	}
-	pw2.Close()
 
-	if err := notifier.Wait(); err != nil {
-		return fmt.Errorf("notifier: %v", err)
+	errSummary := summaryCmd.Wait()
+	pw2.Close()
+	if errSummary != nil {
+		return fmt.Errorf("summary error: %v", errSummary)
+	}
+
+	if err := notifierCmd.Wait(); err != nil {
+		return fmt.Errorf("notifier error: %v", err)
 	}
 
 	return nil
 }
-
-
 
 func success() {
 	fmt.Println("")

@@ -7,8 +7,8 @@ services:
       - "${PORT:-8443}:8443"
     volumes:
       - ./output:/app/output           # Persistência do banco de dados CloverDB
-      - ..:/app/notes                 # Mapeia o vault do Obsidian (um nível acima)
-      - .env:/app/.env                # Carrega o arquivo de configuração e tokens
+      - ../study:/app/notes                 # Mapeia o vault do Obsidian (um nível acima)
+      - .env:/app/.env                # Arquivo de configuração
     environment:
       - PORT=8443
       - VAULT_PATH=/app/notes

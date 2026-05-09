@@ -28,8 +28,11 @@ func HandleVerNota(dbPath string, shortID string, sendFunc func(int64, string, s
 	var note database.NoteDoc
 	doc.Unmarshal(&note)
 
-	// Localizar o arquivo físico
-	vaultRoot, _ := filepath.Abs("..")
+	// Localizar o arquivo físico usando a variável de ambiente do Docker ou fallback local
+	vaultRoot := os.Getenv("VAULT_PATH")
+	if vaultRoot == "" {
+		vaultRoot, _ = filepath.Abs("..")
+	}
 	fullPath := filepath.Join(vaultRoot, note.RelativePath, note.Filename)
 
 	content, err := os.ReadFile(fullPath)

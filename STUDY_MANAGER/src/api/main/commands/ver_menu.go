@@ -84,7 +84,10 @@ func HandleViewContent(dbPath string, shortID string, sendFunc func(int64, strin
 	var note database.NoteDoc
 	doc.Unmarshal(&note)
 
-	vaultRoot, _ := filepath.Abs("..")
+	vaultRoot := os.Getenv("VAULT_PATH")
+	if vaultRoot == "" {
+		vaultRoot, _ = filepath.Abs("..")
+	}
 	fullPath := filepath.Join(vaultRoot, note.RelativePath, note.Filename)
 
 	content, err := os.ReadFile(fullPath)
@@ -220,7 +223,10 @@ func HandleOpenFileByIndex(dbPath string, shortID string, index int, listType st
 		return
 	}
 
-	vaultRoot, _ := filepath.Abs("..")
+	vaultRoot := os.Getenv("VAULT_PATH")
+	if vaultRoot == "" {
+		vaultRoot, _ = filepath.Abs("..")
+	}
 	baseNoteDir := filepath.Join(vaultRoot, note.RelativePath)
 	fullPath := filepath.Join(baseNoteDir, targetPath)
 
@@ -245,7 +251,10 @@ func HandleAbrirArquivo(hexPath string, sendFunc func(int64, string, string) err
 	}
 	
 	relPath := string(decoded)
-	vaultRoot, _ := filepath.Abs("..")
+	vaultRoot := os.Getenv("VAULT_PATH")
+	if vaultRoot == "" {
+		vaultRoot, _ = filepath.Abs("..")
+	}
 	fullPath := filepath.Join(vaultRoot, relPath)
 
 	content, err := os.ReadFile(fullPath)
