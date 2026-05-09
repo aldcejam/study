@@ -1,0 +1,21 @@
+services:
+  study-manager:
+    build:
+      context: .
+    container_name: study-manager
+    ports:
+      - "${PORT:-8443}:8443"
+    volumes:
+      - ./output:/app/output           # Persistência do banco de dados CloverDB
+      - ..:/app/notes                 # Mapeia o vault do Obsidian (um nível acima)
+      - .env:/app/.env                # Carrega o arquivo de configuração e tokens
+    environment:
+      - PORT=8443
+      - VAULT_PATH=/app/notes
+      - DB_PATH=/app/output/clover_db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8443"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

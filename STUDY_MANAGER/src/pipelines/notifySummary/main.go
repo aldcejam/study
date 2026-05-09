@@ -18,18 +18,7 @@ const (
 func main() {
 	header()
 
-	// 0. Ensure 'go' is in PATH
-	if err := ensureGoInPath(); err != nil {
-		fatal("Go não encontrado: %v", err)
-	}
-
-	// 1. Build stages
-	stages := []string{"scanner", "summaryNotification", "notifier"}
-	if err := buildStages(stages); err != nil {
-		fatal("Erro na compilação: %v", err)
-	}
-
-	// 2. Execute pipeline
+	// 1. Execute pipeline
 	if err := executePipeline(); err != nil {
 		fatal("Erro na execução do pipeline: %v", err)
 	}
@@ -43,23 +32,7 @@ func header() {
 	fmt.Printf("%s━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%s\n", ColorBlue, ColorReset)
 }
 
-func buildStages(stages []string) error {
-	fmt.Printf("%s⚙️  Compilando binários...%s\n", ColorBlue, ColorReset)
 
-	if err := os.MkdirAll("./bin", 0755); err != nil {
-		return err
-	}
-
-	for _, stage := range stages {
-		cmd := exec.Command("go", "build", "-o", filepath.Join("bin", stage), "./src/processes/"+stage)
-		if output, err := cmd.CombinedOutput(); err != nil {
-			return fmt.Errorf("falha ao compilar %s: %v\n%s", stage, err, string(output))
-		}
-	}
-
-	fmt.Printf("%s✔  Compilação concluída.%s\n", ColorGreen, ColorReset)
-	return nil
-}
 
 func executePipeline() error {
 	fmt.Printf("%s▶  Executando pipeline...%s\n", ColorBlue, ColorReset)
@@ -120,30 +93,7 @@ func executePipeline() error {
 	return nil
 }
 
-func ensureGoInPath() error {
-	_, err := exec.LookPath("go")
-	if err == nil {
-		return nil
-	}
 
-	// Try common paths
-	tryPaths := []string{
-		"/home/apm/go/bin",
-		"/usr/local/go/bin",
-		"/snap/go/current/bin",
-	}
-
-	for _, path := range tryPaths {
-		goPath := filepath.Join(path, "go")
-		if _, err := os.Stat(goPath); err == nil {
-			newPath := path + string(os.PathListSeparator) + os.Getenv("PATH")
-			os.Setenv("PATH", newPath)
-			return nil
-		}
-	}
-
-	return fmt.Errorf("não foi possível encontrar o executável 'go' no PATH ou em locais comuns")
-}
 
 func success() {
 	fmt.Println("")

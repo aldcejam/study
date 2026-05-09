@@ -1,9 +1,6 @@
-# 📁 Binários compilados
 bin/
-
-# 📋 Cache de estado persistente gerado em runtime
 output/
-
-# 🐹 Go cache e artefatos
 *.test
 *.out
+
+.env

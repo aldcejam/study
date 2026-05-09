@@ -190,15 +190,18 @@ func scanNotes(baseDir string) ([]models.ScannerOutput, error) {
 }
 
 func main() {
-	// O binário é executado de dentro de STUDY_MANAGER/,
-	// o vault está dois níveis acima (estudos/)
 	selfDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "scanner: erro ao obter diretório:", err)
 		os.Exit(1)
 	}
-	// Sobe dois níveis: STUDY_MANAGER/ -> estudos/
-	vaultDir := filepath.Join(selfDir, "..", "..")
+
+	// Prioridade para variável de ambiente (útil no Docker)
+	vaultDir := os.Getenv("VAULT_PATH")
+	if vaultDir == "" {
+		// Fallback: Sobe dois níveis: STUDY_MANAGER/ -> estudos/
+		vaultDir = filepath.Join(selfDir, "..", "..")
+	}
 	vaultDir, _ = filepath.Abs(vaultDir)
 
 	notes, err := scanNotes(vaultDir)
