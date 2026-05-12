@@ -9,6 +9,7 @@ import (
 
 	"study_manager/src/api/main/commands"
 	"study_manager/src/api/main/commands/topic"
+	"study_manager/src/infra/database"
 )
 
 // --- Models ---
@@ -39,7 +40,7 @@ type Chat struct {
 }
 
 // handleWebhook atua como um Proxy/Roteador, despachando comandos para o pacote commands
-func handleWebhook(connStr string, token string) http.HandlerFunc {
+func handleWebhook(repo *database.Repository, token string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -82,19 +83,19 @@ func handleWebhook(connStr string, token string) http.HandlerFunc {
 
 				switch action {
 				case "view_note":
-					commands.HandleViewContent(connStr, shortID, sender, chatID)
+					commands.HandleViewContent(repo, shortID, sender, chatID)
 				case "start_topic":
-					go topic.HandleStartTopic(connStr, shortID, chatID, token, createForumTopic, sendTelegramMessageToTopic)
+					go topic.HandleStartTopic(repo, shortID, chatID, token, createForumTopic, sendTelegramMessageToTopic)
 				case "view_hw":
 					menuSenderFunc := func(id int64, msg string, mode string, markupStr string) error {
 						return sendTelegramMarkup(token, id, msg, mode, markupStr)
 					}
-					commands.HandleViewList(connStr, shortID, "homework", menuSenderFunc, chatID)
+					commands.HandleViewList(repo, shortID, "homework", menuSenderFunc, chatID)
 				case "view_ref":
 					menuSenderFunc := func(id int64, msg string, mode string, markupStr string) error {
 						return sendTelegramMarkup(token, id, msg, mode, markupStr)
 					}
-					commands.HandleViewList(connStr, shortID, "references", menuSenderFunc, chatID)
+					commands.HandleViewList(repo, shortID, "references", menuSenderFunc, chatID)
 				case "open_hw", "open_ref":
 					// Callback format: type:shortID:index
 					parts := strings.Split(data, ":")
@@ -105,7 +106,7 @@ func handleWebhook(connStr string, token string) http.HandlerFunc {
 						if parts[0] == "open_ref" {
 							listType = "references"
 						}
-						commands.HandleOpenFileByIndex(connStr, parts[1], index, listType, sender, chatID)
+						commands.HandleOpenFileByIndex(repo, parts[1], index, listType, sender, chatID)
 					}
 				case "url":
 					// Callback format: url:link
@@ -126,7 +127,7 @@ func handleWebhook(connStr string, token string) http.HandlerFunc {
 		}
 
 		if update.Message.MessageThreadID != 0 {
-			go topic.HandleTopicMessage(connStr, update.Message.Chat.ID, update.Message.MessageThreadID, update.Message.Text, token, sendTelegramMessageToTopic, editTelegramMessageText, sendChatActionToTopic)
+			go topic.HandleTopicMessage(repo, update.Message.Chat.ID, update.Message.MessageThreadID, update.Message.Text, token, sendTelegramMessageToTopic, editTelegramMessageText, sendChatActionToTopic)
 			w.WriteHeader(http.StatusOK)
 			return
 		}
@@ -146,7 +147,7 @@ func handleWebhook(connStr string, token string) http.HandlerFunc {
 		// Roteamento dos comandos
 		switch {
 		case cmd == "/meus_estudos":
-			commands.HandleMeusEstudos(connStr, syncDatabase, sender, escapeHTML, chatID)
+			commands.HandleMeusEstudos(repo, syncDatabase, sender, escapeHTML, chatID)
 
 		case strings.HasPrefix(cmd, "/ver_"):
 			shortID := strings.TrimPrefix(cmd, "/ver_")
@@ -154,7 +155,7 @@ func handleWebhook(connStr string, token string) http.HandlerFunc {
 			menuSenderFunc := func(id int64, msg string, mode string, markupStr string) error {
 				return sendTelegramMarkup(token, id, msg, mode, markupStr)
 			}
-			commands.HandleVerMenu(connStr, shortID, sender, menuSenderFunc, chatID)
+			commands.HandleVerMenu(repo, shortID, sender, menuSenderFunc, chatID)
 
 		case strings.HasPrefix(cmd, "/abrir_"):
 			// ler_arquivo decodificado em hex

@@ -11,17 +11,10 @@ import (
 )
 
 // HandleVerNota busca e envia o conteúdo de uma nota específica
-func HandleVerNota(connStr string, shortID string, sendFunc func(int64, string, string) error, chatID int64) {
-	pool, err := database.InitDB(connStr)
+func HandleVerNota(repo *database.Repository, shortID string, sendFunc func(int64, string, string) error, chatID int64) {
+	note, err := repo.GetNoteByShortID(context.Background(), shortID)
 	if err != nil {
-		log.Printf("DB error: %v", err)
-		return
-	}
-	defer pool.Close()
-
-	var relativePath, filename string
-	err = pool.QueryRow(context.Background(), "SELECT relative_path, filename FROM notes WHERE short_id = $1", shortID).Scan(&relativePath, &filename)
-	if err != nil {
+		log.Printf("Erro ao buscar nota %s: %v", shortID, err)
 		sendFunc(chatID, "❌ Nota não encontrada.", "")
 		return
 	}
@@ -31,12 +24,12 @@ func HandleVerNota(connStr string, shortID string, sendFunc func(int64, string, 
 	if vaultRoot == "" {
 		vaultRoot, _ = filepath.Abs("..")
 	}
-	fullPath := filepath.Join(vaultRoot, relativePath, filename)
+	fullPath := filepath.Join(vaultRoot, note.RelativePath, note.Filename)
 
 	content, err := os.ReadFile(fullPath)
 	if err != nil {
 		log.Printf("Read error: %v", err)
-		sendFunc(chatID, fmt.Sprintf("❌ Erro ao ler arquivo: %s", filename), "")
+		sendFunc(chatID, fmt.Sprintf("❌ Erro ao ler arquivo: %s", note.Filename), "")
 		return
 	}
 

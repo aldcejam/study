@@ -105,6 +105,8 @@ func main() {
 	}
 	defer pool.Close()
 
+	repo := database.NewRepository(pool)
+
 	var urgentes []models.SummaryNotificationOutput
 	var aNotificar []models.SummaryNotificationOutput
 	today := time.Now().Truncate(24 * time.Hour)
@@ -166,31 +168,26 @@ func main() {
 		referencesJson, _ := json.Marshal(note.References)
 		homeworkJson, _ := json.Marshal(note.Homework)
 
-		_, err := pool.Exec(context.Background(), `
-			INSERT INTO notes (filename, relative_path, short_id, tema, subtema, revisoes, "references", homework, tags, activity, updated_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-			ON CONFLICT (relative_path) DO UPDATE SET
-				filename = EXCLUDED.filename,
-				short_id = EXCLUDED.short_id,
-				tema = EXCLUDED.tema,
-				subtema = EXCLUDED.subtema,
-				revisoes = EXCLUDED.revisoes,
-				"references" = EXCLUDED."references",
-				homework = EXCLUDED.homework,
-				tags = EXCLUDED.tags,
-				activity = EXCLUDED.activity,
-				updated_at = EXCLUDED.updated_at
-		`, note.Filename, note.RelativePath, shortID, note.Tema, note.Subtema, revisoesJson, referencesJson, homeworkJson, note.Tags, note.Activity, updatedAtTime)
+		err := repo.UpsertNote(context.Background(), database.Note{
+			Filename:     note.Filename,
+			RelativePath: note.RelativePath,
+			ShortID:      shortID,
+			Tema:         note.Tema,
+			Subtema:      note.Subtema,
+			Revisoes:     revisoesJson,
+			References:   referencesJson,
+			Homework:     homeworkJson,
+			Tags:         note.Tags,
+			Activity:     note.Activity,
+			UpdatedAt:    updatedAtTime,
+		})
 
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "ERRO ao atualizar nota %s: %v\n", note.RelativePath, err)
 		}
 
 		// 4. Checar tabela `notifications`
-		var lastNotifiedAt *time.Time
-		var notifCompleted bool
-
-		err = pool.QueryRow(context.Background(), "SELECT last_notified_at, completed FROM notifications WHERE relative_path = $1", note.RelativePath).Scan(&lastNotifiedAt, &notifCompleted)
+		lastNotifiedAt, _, err := repo.GetNotificationStatus(context.Background(), note.RelativePath)
 
 		shouldNotifyNow := false
 		if !completed {
@@ -217,13 +214,7 @@ func main() {
 		}
 
 		// UPSERT notification
-		_, err = pool.Exec(context.Background(), `
-			INSERT INTO notifications (relative_path, last_notified_at, completed)
-			VALUES ($1, $2, $3)
-			ON CONFLICT (relative_path) DO UPDATE SET
-				last_notified_at = EXCLUDED.last_notified_at,
-				completed = EXCLUDED.completed
-		`, note.RelativePath, lastNotifiedAt, completed)
+		err = repo.UpsertNotification(context.Background(), note.RelativePath, lastNotifiedAt, completed)
 
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "ERRO ao atualizar notificação %s: %v\n", note.RelativePath, err)

@@ -8,8 +8,8 @@ import (
 
 	"os/exec"
 	"time"
-
 	"study_manager/src/utils/dotenv"
+	"study_manager/src/infra/database"
 )
 
 
@@ -47,6 +47,15 @@ func main() {
 		dbUrl = "postgres://study_user:study_password@localhost:5432/study_db?sslmode=disable"
 	}
 
+	pool, err := database.InitDB(dbUrl)
+	if err != nil {
+		log.Fatalf("❌ Erro ao conectar ao banco de dados: %v", err)
+	}
+	defer pool.Close()
+
+	repo := database.NewRepository(pool)
+	log.Println("✅ Conexão com o banco estabelecida e Repository criado.")
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8443"
@@ -62,8 +71,8 @@ func main() {
 		fmt.Fprint(w, "🚀 Study Manager API is up and running!")
 	})
 
-	// Telegram Webhook Route - Passamos o dbUrl para que o handler abra o pool sob demanda
-	http.HandleFunc("/webhook", handleWebhook(dbUrl, token))
+	// Telegram Webhook Route - Passamos o repo
+	http.HandleFunc("/webhook", handleWebhook(repo, token))
 
 	certFile := os.Getenv("CERT_FILE")
 	keyFile := os.Getenv("KEY_FILE")

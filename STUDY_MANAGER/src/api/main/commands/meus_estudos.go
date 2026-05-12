@@ -55,35 +55,22 @@ func RenderTree(node *TreeNode, level int, sb *strings.Builder, escapeFunc func(
 }
 
 // HandleMeusEstudos processa a árvore de notas
-func HandleMeusEstudos(connStr string, syncFunc func() error, sendFunc func(int64, string, string) error, escapeFunc func(string) string, chatID int64) {
+func HandleMeusEstudos(repo *database.Repository, syncFunc func() error, sendFunc func(int64, string, string) error, escapeFunc func(string) string, chatID int64) {
 	if err := syncFunc(); err != nil {
 		log.Printf("Sync error: %v", err)
 	}
 
-	pool, err := database.InitDB(connStr)
+	notes, err := repo.GetAllNotesInfo(context.Background())
 	if err != nil {
-		log.Printf("DB error: %v", err)
+		log.Printf("Query error: %v", err)
 		sendFunc(chatID, "❌ Erro ao acessar o banco de dados.", "")
 		return
 	}
-	defer pool.Close()
-
-	rows, err := pool.Query(context.Background(), "SELECT relative_path, tema, short_id FROM notes")
-	if err != nil {
-		log.Printf("Query error: %v", err)
-		return
-	}
-	defer rows.Close()
 
 	root := NewTreeNode("Raiz", true, "")
 
-	for rows.Next() {
-		var relativePath, tema, shortID string
-		if err := rows.Scan(&relativePath, &tema, &shortID); err != nil {
-			continue
-		}
-
-		normalizedPath := filepath.ToSlash(relativePath)
+	for _, n := range notes {
+		normalizedPath := filepath.ToSlash(n.RelativePath)
 		parts := strings.Split(normalizedPath, "/")
 
 		current := root
@@ -95,8 +82,8 @@ func HandleMeusEstudos(connStr string, syncFunc func() error, sendFunc func(int6
 			displayName := part
 			nodeShortID := ""
 			if isLast {
-				displayName = tema
-				nodeShortID = shortID
+				displayName = n.Tema
+				nodeShortID = n.ShortID
 			}
 
 			if _, exists := current.Children[displayName]; !exists {

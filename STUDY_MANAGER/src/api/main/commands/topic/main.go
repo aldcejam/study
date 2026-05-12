@@ -18,16 +18,8 @@ import (
 var systemPrompt string
 
 // HandleStartTopic carrega a nota, cria um tópico e salva a sessão de estudo.
-func HandleStartTopic(connStr string, shortID string, chatID int64, token string, createTopicFunc func(string, int64, string) (int, error), sendTopicFunc func(string, int64, int, string, string) (int, error)) {
-	pool, err := database.InitDB(connStr)
-	if err != nil {
-		log.Printf("DB Error: %v", err)
-		return
-	}
-	defer pool.Close()
-
-	var tema string
-	err = pool.QueryRow(context.Background(), "SELECT tema FROM notes WHERE short_id = $1", shortID).Scan(&tema)
+func HandleStartTopic(repo *database.Repository, shortID string, chatID int64, token string, createTopicFunc func(string, int64, string) (int, error), sendTopicFunc func(string, int64, int, string, string) (int, error)) {
+	note, err := repo.GetNoteByShortID(context.Background(), shortID)
 	if err != nil {
 		log.Printf("Nota não encontrada para o shortID: %s", shortID)
 		sendTopicFunc(token, chatID, 0, "❌ Nota não encontrada.", "")
@@ -35,7 +27,7 @@ func HandleStartTopic(connStr string, shortID string, chatID int64, token string
 	}
 
 	// Limita o nome do tópico a 128 caracteres (limite do Telegram)
-	topicName := "Estudo: " + tema
+	topicName := "Estudo: " + note.Tema
 	if len(topicName) > 128 {
 		topicName = topicName[:125] + "..."
 	}
@@ -48,41 +40,28 @@ func HandleStartTopic(connStr string, shortID string, chatID int64, token string
 	}
 
 	// Salva a sessão de estudo no banco de dados (upsert)
-	_, err = pool.Exec(context.Background(), `
-		INSERT INTO study_sessions (chat_id, thread_id, short_id, history) 
-		VALUES ($1, $2, $3, '[]'::jsonb)
-		ON CONFLICT (chat_id, thread_id) DO NOTHING
-	`, chatID, threadID, shortID)
+	err = repo.UpsertStudySession(context.Background(), chatID, threadID, shortID)
 
 	if err != nil {
 		log.Printf("Erro ao salvar sessão: %v", err)
 	}
 
 	// Envia mensagem de boas vindas dentro do tópico
-	welcomeMsg := fmt.Sprintf("🤖 **Tópico de Estudo Iniciado!**\n\nEstou pronto para te ajudar a estudar a nota **%s**.\n\nPode mandar suas dúvidas ou me pedir para testar seus conhecimentos sobre o assunto!", tema)
+	welcomeMsg := fmt.Sprintf("🤖 **Tópico de Estudo Iniciado!**\n\nEstou pronto para te ajudar a estudar a nota **%s**.\n\nPode mandar suas dúvidas ou me pedir para testar seus conhecimentos sobre o assunto!", note.Tema)
 	sendTopicFunc(token, chatID, threadID, welcomeMsg, "Markdown")
 }
 
 // HandleTopicMessage processa mensagens enviadas em tópicos.
-func HandleTopicMessage(connStr string, chatID int64, threadID int, text string, token string, sendTopicFunc func(string, int64, int, string, string) (int, error), editTopicMessageFunc func(string, int64, int, string, string) error, sendChatActionFunc func(string, int64, int, string) error) {
+func HandleTopicMessage(repo *database.Repository, chatID int64, threadID int, text string, token string, sendTopicFunc func(string, int64, int, string, string) (int, error), editTopicMessageFunc func(string, int64, int, string, string) error, sendChatActionFunc func(string, int64, int, string) error) {
 	log.Printf("HandleTopicMessage called: chatID=%d, threadID=%d", chatID, threadID)
-	pool, err := database.InitDB(connStr)
-	if err != nil {
-		log.Printf("DB error: %v", err)
-		return
-	}
-	defer pool.Close()
 
-	var shortID string
-	var historyBytes []byte
-	err = pool.QueryRow(context.Background(), "SELECT short_id, history FROM study_sessions WHERE chat_id = $1 AND thread_id = $2", chatID, threadID).Scan(&shortID, &historyBytes)
+	shortID, historyBytes, err := repo.GetStudySession(context.Background(), chatID, threadID)
 	if err != nil {
 		log.Printf("Active session not found: %v", err)
 		return
 	}
 
-	var relativePath, filename string
-	err = pool.QueryRow(context.Background(), "SELECT relative_path, filename FROM notes WHERE short_id = $1", shortID).Scan(&relativePath, &filename)
+	note, err := repo.GetNoteByShortID(context.Background(), shortID)
 	if err != nil {
 		log.Printf("Note info not found: %v", err)
 		return
@@ -92,7 +71,7 @@ func HandleTopicMessage(connStr string, chatID int64, threadID int, text string,
 	if vaultRoot == "" {
 		vaultRoot, _ = filepath.Abs("..")
 	}
-	fullPath := filepath.Join(vaultRoot, relativePath, filename)
+	fullPath := filepath.Join(vaultRoot, note.RelativePath, note.Filename)
 	contentBytes, err := os.ReadFile(fullPath)
 	if err != nil {
 		log.Printf("Failed to read note file: %v", err)
@@ -142,7 +121,7 @@ func HandleTopicMessage(connStr string, chatID int64, threadID int, text string,
 	history = append(history, "Tutor: "+responseStr)
 	
 	newHistoryBytes, _ := json.Marshal(history)
-	_, err = pool.Exec(context.Background(), "UPDATE study_sessions SET history = $1 WHERE chat_id = $2 AND thread_id = $3", newHistoryBytes, chatID, threadID)
+	err = repo.UpdateStudySessionHistory(context.Background(), chatID, threadID, newHistoryBytes)
 	if err != nil {
 		log.Printf("Failed to update history: %v", err)
 	}
