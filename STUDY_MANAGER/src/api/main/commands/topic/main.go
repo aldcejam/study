@@ -13,13 +13,22 @@ import (
 
 	"study_manager/src/infra/database"
 	"github.com/jackc/pgx/v5"
+	"sync"
 )
+
+var creationLocks sync.Map
 
 //go:embed system_prompt.txt
 var systemPrompt string
 
 // HandleStartTopic carrega a nota, cria um tópico e salva a sessão de estudo.
 func HandleStartTopic(repo *database.Repository, shortID string, chatID int64, token string, createTopicFunc func(string, int64, string) (int, error), sendTopicFunc func(string, int64, int, string, string) (int, error)) {
+	lockKey := fmt.Sprintf("%d:%s", chatID, shortID)
+	if _, loaded := creationLocks.LoadOrStore(lockKey, true); loaded {
+		return
+	}
+	defer creationLocks.Delete(lockKey)
+
 	note, err := repo.GetNoteByShortID(context.Background(), shortID)
 	if err != nil {
 		log.Printf("Nota não encontrada para o shortID: %s", shortID)
