@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"study_manager/src/api/main/commands"
+	"study_manager/src/api/main/commands/topic"
 )
 
 // --- Models ---
@@ -83,7 +84,7 @@ func handleWebhook(dbPath string, token string) http.HandlerFunc {
 				case "view_note":
 					commands.HandleViewContent(dbPath, shortID, sender, chatID)
 				case "start_topic":
-					go commands.HandleStartTopic(dbPath, shortID, chatID, token, createForumTopic, sendTelegramMessageToTopic)
+					go topic.HandleStartTopic(dbPath, shortID, chatID, token, createForumTopic, sendTelegramMessageToTopic)
 				case "view_hw":
 					menuSenderFunc := func(id int64, msg string, mode string, markupStr string) error {
 						return sendTelegramMarkup(token, id, msg, mode, markupStr)
@@ -125,7 +126,7 @@ func handleWebhook(dbPath string, token string) http.HandlerFunc {
 		}
 
 		if update.Message.MessageThreadID != 0 && update.Message.IsTopicMessage {
-			go commands.HandleTopicMessage(dbPath, update.Message.Chat.ID, update.Message.MessageThreadID, update.Message.Text, token, sendTelegramMessageToTopic)
+			go topic.HandleTopicMessage(dbPath, update.Message.Chat.ID, update.Message.MessageThreadID, update.Message.Text, token, sendTelegramMessageToTopic)
 			w.WriteHeader(http.StatusOK)
 			return
 		}

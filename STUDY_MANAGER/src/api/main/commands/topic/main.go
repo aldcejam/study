@@ -1,6 +1,7 @@
-package commands
+package topic
 
 import (
+	_ "embed"
 	"fmt"
 	"log"
 	"os"
@@ -9,9 +10,13 @@ import (
 
 	"study_manager/src/infra/database"
 
+	c "github.com/ostafen/clover/v2"
 	"github.com/ostafen/clover/v2/document"
 	"github.com/ostafen/clover/v2/query"
 )
+
+//go:embed system_prompt.txt
+var systemPrompt string
 
 // HandleStartTopic carrega a nota, cria um tópico e salva a sessão de estudo.
 func HandleStartTopic(dbPath string, shortID string, chatID int64, token string, createTopicFunc func(string, int64, string) (int, error), sendTopicFunc func(string, int64, int, string, string) error) {
@@ -70,19 +75,45 @@ func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, 
 	}
 	defer db.Close()
 
-	// Procura a sessão ativa
-	doc, err := db.FindFirst(query.NewQuery("study_sessions").Where(query.Field("thread_id").Eq(threadID).And(query.Field("chat_id").Eq(chatID))))
-	if err != nil || doc == nil {
-		// Não é um tópico de estudo gerenciado pelo bot
+	doc, shortID, err := getActiveSession(db, chatID, threadID)
+	if err != nil {
 		return
 	}
 
-	shortID := doc.Get("short_id").(string)
-	
-	// Pega a nota
+	contentStr, err := getNoteContent(db, shortID)
+	if err != nil {
+		return
+	}
+
+	history := getHistory(doc)
+	prompt := buildPrompt(contentStr, history, text)
+	history = append(history, "Usuário: "+text)
+
+	responseStr, err := invokeGeminiCLI(prompt)
+	if err != nil {
+		responseStr = "Desculpe, ocorreu um erro ao processar sua resposta via Gemini CLI."
+	}
+
+	history = append(history, "Tutor: "+responseStr)
+	saveHistory(db, doc, history)
+
+	sendTopicFunc(token, chatID, threadID, responseStr, "Markdown")
+}
+
+// Helpers
+
+func getActiveSession(db *c.DB, chatID int64, threadID int) (*document.Document, string, error) {
+	doc, err := db.FindFirst(query.NewQuery("study_sessions").Where(query.Field("thread_id").Eq(threadID).And(query.Field("chat_id").Eq(chatID))))
+	if err != nil || doc == nil {
+		return nil, "", fmt.Errorf("session not found")
+	}
+	return doc, doc.Get("short_id").(string), nil
+}
+
+func getNoteContent(db *c.DB, shortID string) (string, error) {
 	noteDoc, err := db.FindFirst(query.NewQuery("notes").Where(query.Field("short_id").Eq(shortID)))
 	if err != nil || noteDoc == nil {
-		return
+		return "", fmt.Errorf("note not found")
 	}
 
 	var note database.NoteDoc
@@ -95,14 +126,15 @@ func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, 
 	fullPath := filepath.Join(vaultRoot, note.RelativePath, note.Filename)
 
 	content, err := os.ReadFile(fullPath)
-	contentStr := ""
-	if err == nil {
-		contentStr = string(content)
+	if err != nil {
+		return "", err
 	}
+	return string(content), nil
+}
 
-	// Histórico
-	historyRaw := doc.Get("history")
+func getHistory(doc *document.Document) []string {
 	var history []string
+	historyRaw := doc.Get("history")
 	if historyRaw != nil {
 		if arr, ok := historyRaw.([]interface{}); ok {
 			for _, h := range arr {
@@ -112,9 +144,11 @@ func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, 
 			}
 		}
 	}
+	return history
+}
 
-	// Monta o super prompt
-	prompt := fmt.Sprintf("Você é um tutor de estudos. Baseado na seguinte nota:\n\n---\n%s\n---\n\n", contentStr)
+func buildPrompt(contentStr string, history []string, text string) string {
+	prompt := fmt.Sprintf("%s\n\n---\n%s\n---\n\n", systemPrompt, contentStr)
 	if len(history) > 0 {
 		prompt += "Histórico da conversa:\n"
 		for _, h := range history {
@@ -122,32 +156,22 @@ func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, 
 		}
 	}
 	prompt += "\nUsuário: " + text + "\nTutor:"
+	return prompt
+}
 
-	// Atualiza histórico com a msg do user
-	history = append(history, "Usuário: "+text)
-
-	// Chama o gemini CLI
-	// Exemplo de comando: gemini ask "prompt"
+func invokeGeminiCLI(prompt string) (string, error) {
 	cmd := exec.Command("gemini", "ask", prompt)
 	out, err := cmd.Output()
-	responseStr := ""
 	if err != nil {
 		log.Printf("Erro no gemini CLI: %v\nOutput: %s", err, string(out))
-		responseStr = "Desculpe, ocorreu um erro ao processar sua resposta via Gemini CLI."
-	} else {
-		responseStr = string(out)
+		return "", err
 	}
+	return string(out), nil
+}
 
-	// Salva a resposta no histórico
-	history = append(history, "Tutor: "+responseStr)
-	
-	// Atualiza o banco
+func saveHistory(db *c.DB, doc *document.Document, history []string) {
 	db.UpdateById("study_sessions", doc.ObjectId(), func(d *document.Document) *document.Document {
 		d.Set("history", history)
 		return d
 	})
-
-	// Envia a resposta de volta ao tópico
-	sendTopicFunc(token, chatID, threadID, responseStr, "Markdown")
 }
-
