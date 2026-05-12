@@ -2,12 +2,13 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -115,3 +116,66 @@ func syncDatabase() error {
 	log.Println("✅ Sincronização completa (banco recriado).")
 	return nil
 }
+
+// createForumTopic cria um novo tópico em um supergrupo e retorna o message_thread_id
+func createForumTopic(token string, chatID int64, name string) (int, error) {
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/createForumTopic", token)
+	payload := url.Values{
+		"chat_id": {fmt.Sprintf("%d", chatID)},
+		"name":    {name},
+	}
+
+	resp, err := http.PostForm(apiURL, payload)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return 0, fmt.Errorf("create topic error: %s", string(body))
+	}
+
+	var result struct {
+		Ok     bool `json:"ok"`
+		Result struct {
+			MessageThreadID int `json:"message_thread_id"`
+		} `json:"result"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return 0, err
+	}
+
+	return result.Result.MessageThreadID, nil
+}
+
+// sendTelegramMessageToTopic envia uma mensagem para um tópico específico
+func sendTelegramMessageToTopic(token string, chatID int64, threadID int, text string, parseMode string) error {
+	if len(text) > 4000 {
+		text = text[:3997] + "..."
+	}
+
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", token)
+	payload := url.Values{
+		"chat_id":           {fmt.Sprintf("%d", chatID)},
+		"message_thread_id": {fmt.Sprintf("%d", threadID)},
+		"text":              {text},
+	}
+	if parseMode != "" {
+		payload.Set("parse_mode", parseMode)
+	}
+
+	resp, err := http.PostForm(apiURL, payload)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("telegram topic error: %s", string(body))
+	}
+	return nil
+}
+

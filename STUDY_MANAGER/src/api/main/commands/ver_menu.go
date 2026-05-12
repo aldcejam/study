@@ -50,6 +50,9 @@ func HandleVerMenu(dbPath string, shortID string, sendFunc func(int64, string, s
 				{Text: "📖 Ver Nota", CallbackData: "view_note:" + shortID},
 			},
 			{
+				{Text: "🤖 Iniciar Tópico", CallbackData: "start_topic:" + shortID},
+			},
+			{
 				{Text: "📝 Ver Atividades", CallbackData: "view_hw:" + shortID},
 				{Text: "🔗 Ver Referências", CallbackData: "view_ref:" + shortID},
 			},

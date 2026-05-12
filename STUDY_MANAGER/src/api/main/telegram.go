@@ -26,9 +26,11 @@ type Update struct {
 }
 
 type Message struct {
-	MessageID int    `json:"message_id"`
-	Chat      Chat   `json:"chat"`
-	Text      string `json:"text"`
+	MessageID       int    `json:"message_id"`
+	Chat            Chat   `json:"chat"`
+	Text            string `json:"text"`
+	MessageThreadID int    `json:"message_thread_id,omitempty"`
+	IsTopicMessage  bool   `json:"is_topic_message,omitempty"`
 }
 
 type Chat struct {
@@ -60,7 +62,12 @@ func handleWebhook(dbPath string, token string) http.HandlerFunc {
 		// --- TRATAMENTO DE CALLBACK QUERIES (Cliques em botões) ---
 		if update.CallbackQuery != nil {
 			cq := update.CallbackQuery
-			chatID := cq.From.ID
+			var chatID int64
+			if cq.Message != nil {
+				chatID = int64(cq.Message.Chat.ID)
+			} else {
+				chatID = int64(cq.From.ID)
+			}
 			data := cq.Data
 			log.Printf("Callback received: %s from %d", data, chatID)
 
@@ -75,6 +82,8 @@ func handleWebhook(dbPath string, token string) http.HandlerFunc {
 				switch action {
 				case "view_note":
 					commands.HandleViewContent(dbPath, shortID, sender, chatID)
+				case "start_topic":
+					commands.HandleStartTopic(dbPath, shortID, chatID, token, createForumTopic, sendTelegramMessageToTopic)
 				case "view_hw":
 					menuSenderFunc := func(id int64, msg string, mode string, markupStr string) error {
 						return sendTelegramMarkup(token, id, msg, mode, markupStr)
@@ -111,6 +120,12 @@ func handleWebhook(dbPath string, token string) http.HandlerFunc {
 
 		// --- TRATAMENTO DE MENSAGENS NORMAIS ---
 		if update.Message == nil || update.Message.Text == "" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if update.Message.MessageThreadID != 0 && update.Message.IsTopicMessage {
+			commands.HandleTopicMessage(dbPath, update.Message.Chat.ID, update.Message.MessageThreadID, update.Message.Text, token, sendTelegramMessageToTopic)
 			w.WriteHeader(http.StatusOK)
 			return
 		}

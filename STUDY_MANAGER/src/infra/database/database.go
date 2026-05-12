@@ -25,6 +25,10 @@ func InitDB(dbPath string) (*clover.DB, error) {
 	if !hasNotif {
 		db.CreateCollection("notifications")
 	}
+	hasStudySessions, _ := db.HasCollection("study_sessions")
+	if !hasStudySessions {
+		db.CreateCollection("study_sessions")
+	}
 
 	// Garantir que os índices existem para melhor performance e buscas
 	db.CreateIndex("notes", "relative_path")
