@@ -220,3 +220,25 @@ func editTelegramMessageText(token string, chatID int64, messageID int, text str
 	return nil
 }
 
+// sendChatActionToTopic envia uma ação de chat (ex: "typing") para um tópico
+func sendChatActionToTopic(token string, chatID int64, threadID int, action string) error {
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendChatAction", token)
+	payload := url.Values{
+		"chat_id":           {fmt.Sprintf("%d", chatID)},
+		"message_thread_id": {fmt.Sprintf("%d", threadID)},
+		"action":            {action},
+	}
+
+	resp, err := http.PostForm(apiURL, payload)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("telegram chat action error: %s", string(body))
+	}
+	return nil
+}
+

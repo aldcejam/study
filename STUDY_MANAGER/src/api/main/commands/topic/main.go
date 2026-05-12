@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	"study_manager/src/infra/database"
 
@@ -68,7 +69,7 @@ func HandleStartTopic(dbPath string, shortID string, chatID int64, token string,
 }
 
 // HandleTopicMessage processa mensagens enviadas em tópicos.
-func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, token string, sendTopicFunc func(string, int64, int, string, string) (int, error), editTopicMessageFunc func(string, int64, int, string, string) error) {
+func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, token string, sendTopicFunc func(string, int64, int, string, string) (int, error), editTopicMessageFunc func(string, int64, int, string, string) error, sendChatActionFunc func(string, int64, int, string) error) {
 	db, err := database.InitDB(dbPath)
 	if err != nil {
 		return
@@ -92,7 +93,26 @@ func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, 
 	// Envia mensagem de loading e pega o ID
 	msgID, _ := sendTopicFunc(token, chatID, threadID, "🤔 *Pensando...* ⏳", "Markdown")
 
+	// Inicia a animação "digitando..." em background
+	stopTyping := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(4 * time.Second)
+		defer ticker.Stop()
+		sendChatActionFunc(token, chatID, threadID, "typing")
+		for {
+			select {
+			case <-ticker.C:
+				sendChatActionFunc(token, chatID, threadID, "typing")
+			case <-stopTyping:
+				return
+			}
+		}
+	}()
+
 	responseStr, err := invokeGeminiCLI(prompt)
+	
+	close(stopTyping) // Para a animação de digitando
+
 	if err != nil {
 		responseStr = "Desculpe, ocorreu um erro ao processar sua resposta via Gemini CLI."
 	}
