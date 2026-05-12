@@ -1,0 +1,7 @@
+.git
+.agents
+output/
+notes/
+bin/
+*.md
+.env

@@ -6,20 +6,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
-
-	"study_manager/src/utils/dotenv"
 )
 
-func loadEnv() {
-	selfDir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	dotenv.Load(
-		filepath.Join(selfDir, "../../../.env"), // estudos/.env
-		filepath.Join(selfDir, "../../.env"),    // STUDY_MANAGER/.env
-		".env",
-	)
-}
 
 func sendTelegram(token, chatID, message string) error {
 	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", token)
@@ -41,8 +30,6 @@ func sendTelegram(token, chatID, message string) error {
 }
 
 func main() {
-	loadEnv()
-
 	raw, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "notifier: erro ao ler stdin:", err)

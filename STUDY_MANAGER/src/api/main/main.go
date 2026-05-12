@@ -12,8 +12,11 @@ import (
 	"study_manager/src/utils/dotenv"
 )
 
+
+
 func main() {
-	dotenv.Load(".env", "../.env", "../../.env")
+	dotenv.Load(".env", "../.env", "../../../.env")
+
 
 	// Ticker para rodar o pipeline de resumo a cada 5s (Teste de Otimização)
 	go func() {

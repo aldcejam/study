@@ -1,4 +1,3 @@
-// Package dotenv carrega variáveis de um arquivo .env sem dependências externas.
 package dotenv
 
 import (
@@ -29,10 +28,12 @@ func Load(paths ...string) {
 			}
 			key := strings.TrimSpace(parts[0])
 			val := strings.TrimSpace(parts[1])
-			if os.Getenv(key) == "" { // não sobrescreve variáveis já definidas
-				os.Setenv(key, val)
-			}
+			
+			// Remove aspas se existirem
+			val = strings.Trim(val, `"'`)
+			
+			os.Setenv(key, val)
 		}
-		return // para no primeiro arquivo encontrado
+		return // Para no primeiro .env que encontrar e carregar
 	}
 }
