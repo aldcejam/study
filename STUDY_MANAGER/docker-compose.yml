@@ -4,7 +4,7 @@ services:
       context: .
     container_name: study-manager
     ports:
-      - "${PORT:-8443}:8443"
+      - "8443:8443"
     volumes:
       - ./output:/app/output           # Persistência do banco de dados CloverDB
       - ../study:/app/notes                 # Mapeia o vault do Obsidian (um nível acima)
