@@ -125,7 +125,7 @@ func handleWebhook(dbPath string, token string) http.HandlerFunc {
 			return
 		}
 
-		if update.Message.MessageThreadID != 0 && update.Message.IsTopicMessage {
+		if update.Message.MessageThreadID != 0 {
 			go topic.HandleTopicMessage(dbPath, update.Message.Chat.ID, update.Message.MessageThreadID, update.Message.Text, token, sendTelegramMessageToTopic, editTelegramMessageText, sendChatActionToTopic)
 			w.WriteHeader(http.StatusOK)
 			return

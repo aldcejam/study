@@ -70,19 +70,23 @@ func HandleStartTopic(dbPath string, shortID string, chatID int64, token string,
 
 // HandleTopicMessage processa mensagens enviadas em tópicos.
 func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, token string, sendTopicFunc func(string, int64, int, string, string) (int, error), editTopicMessageFunc func(string, int64, int, string, string) error, sendChatActionFunc func(string, int64, int, string) error) {
+	log.Printf("HandleTopicMessage called: chatID=%d, threadID=%d", chatID, threadID)
 	db, err := database.InitDB(dbPath)
 	if err != nil {
+		log.Printf("DB error: %v", err)
 		return
 	}
 	defer db.Close()
 
 	doc, shortID, err := getActiveSession(db, chatID, threadID)
 	if err != nil {
+		log.Printf("Active session not found: %v", err)
 		return
 	}
 
 	contentStr, err := getNoteContent(db, shortID)
 	if err != nil {
+		log.Printf("Note content not found: %v", err)
 		return
 	}
 
@@ -91,7 +95,10 @@ func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, 
 	history = append(history, "Usuário: "+text)
 
 	// Envia mensagem de loading e pega o ID
-	msgID, _ := sendTopicFunc(token, chatID, threadID, "🤔 *Pensando...* ⏳", "Markdown")
+	msgID, err := sendTopicFunc(token, chatID, threadID, "🤔 *Pensando...* ⏳", "Markdown")
+	if err != nil {
+		log.Printf("Error sending loading message: %v", err)
+	}
 
 	// Inicia a animação "digitando..." em background
 	stopTyping := make(chan struct{})
@@ -114,6 +121,7 @@ func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, 
 	close(stopTyping) // Para a animação de digitando
 
 	if err != nil {
+		log.Printf("Gemini CLI error: %v", err)
 		responseStr = "Desculpe, ocorreu um erro ao processar sua resposta via Gemini CLI."
 	}
 
@@ -130,11 +138,30 @@ func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, 
 // Helpers
 
 func getActiveSession(db *c.DB, chatID int64, threadID int) (*document.Document, string, error) {
-	doc, err := db.FindFirst(query.NewQuery("study_sessions").Where(query.Field("thread_id").Eq(threadID).And(query.Field("chat_id").Eq(chatID))))
-	if err != nil || doc == nil {
-		return nil, "", fmt.Errorf("session not found")
+	docs, err := db.FindAll(query.NewQuery("study_sessions"))
+	if err != nil {
+		return nil, "", err
 	}
-	return doc, doc.Get("short_id").(string), nil
+	for _, doc := range docs {
+		var cID int64
+		if val, ok := doc.Get("chat_id").(int64); ok {
+			cID = val
+		} else if val, ok := doc.Get("chat_id").(float64); ok {
+			cID = int64(val)
+		}
+
+		var tID int
+		if val, ok := doc.Get("thread_id").(int); ok {
+			tID = val
+		} else if val, ok := doc.Get("thread_id").(float64); ok {
+			tID = int(val)
+		}
+
+		if cID == chatID && tID == threadID {
+			return doc, doc.Get("short_id").(string), nil
+		}
+	}
+	return nil, "", fmt.Errorf("session not found")
 }
 
 func getNoteContent(db *c.DB, shortID string) (string, error) {
