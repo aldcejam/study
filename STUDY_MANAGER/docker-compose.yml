@@ -9,6 +9,7 @@ services:
       - ./output:/app/output           # Persistência do banco de dados CloverDB
       - ../:/app/notes                 # Mapeia o vault do Obsidian (um nível acima)
       - .env:/app/.env                # Arquivo de configuração
+      - ~/.gemini:/root/.gemini       # Credenciais do Gemini CLI
     environment:
       - PORT=8443
       - VAULT_PATH=/app/notes
