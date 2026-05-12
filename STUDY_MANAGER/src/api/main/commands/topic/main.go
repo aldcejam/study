@@ -38,6 +38,11 @@ func HandleStartTopic(repo *database.Repository, shortID string, chatID int64, t
 
 	// Verifica se já existe um tópico para esta nota
 	existingThreadID, err := repo.GetThreadIDForNote(context.Background(), chatID, shortID)
+	if err != nil && err != pgx.ErrNoRows {
+		log.Printf("Erro ao verificar tópico existente para chat %d, nota %s: %v", chatID, shortID, err)
+		return
+	}
+
 	if err == nil && existingThreadID != 0 {
 		// Tenta enviar o "bump" para ver se o tópico ainda existe
 		bumpMsg := "🔔 **Retornando aos Estudos**\n\nEste é o tópico ativo para esta nota. O que vamos estudar agora?"
@@ -52,9 +57,6 @@ func HandleStartTopic(repo *database.Repository, shortID string, chatID int64, t
 		// Falha: O tópico provavelmente foi deletado no Telegram
 		log.Printf("Erro ao enviar bump para o tópico %d (provavelmente deletado). Recriando... (Erro: %v)", existingThreadID, sendErr)
 		repo.DeleteStudySession(context.Background(), chatID, existingThreadID)
-	}
-	if err != nil && err != pgx.ErrNoRows {
-		log.Printf("Erro ao verificar tópico existente: %v", err)
 	}
 
 	// Limita o nome do tópico a 128 caracteres (limite do Telegram)

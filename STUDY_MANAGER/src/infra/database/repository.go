@@ -73,7 +73,9 @@ func (r *Repository) UpsertStudySession(ctx context.Context, chatID int64, threa
 	_, err := r.pool.Exec(ctx, `
 		INSERT INTO study_sessions (chat_id, thread_id, short_id, history)
 		VALUES ($1, $2, $3, '[]'::jsonb)
-		ON CONFLICT (chat_id, thread_id) DO NOTHING
+		ON CONFLICT (chat_id, short_id) DO UPDATE SET
+			thread_id = EXCLUDED.thread_id,
+			history = EXCLUDED.history
 	`, chatID, threadID, shortID)
 	return err
 }

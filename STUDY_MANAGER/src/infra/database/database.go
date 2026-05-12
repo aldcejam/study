@@ -68,7 +68,8 @@ func RunMigrations(ctx context.Context, pool *pgxpool.Pool) error {
 		thread_id INTEGER NOT NULL,
 		short_id TEXT NOT NULL REFERENCES notes(short_id) ON DELETE CASCADE,
 		history JSONB DEFAULT '[]'::jsonb, 
-		PRIMARY KEY (chat_id, thread_id) 
+		PRIMARY KEY (chat_id, thread_id),
+		CONSTRAINT unique_chat_note UNIQUE (chat_id, short_id)
 	);
 	`
 
