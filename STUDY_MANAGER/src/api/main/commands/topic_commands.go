@@ -129,7 +129,7 @@ func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, 
 	// Chama o gemini CLI
 	// Exemplo de comando: gemini ask "prompt"
 	cmd := exec.Command("gemini", "ask", prompt)
-	out, err := cmd.CombinedOutput()
+	out, err := cmd.Output()
 	responseStr := ""
 	if err != nil {
 		log.Printf("Erro no gemini CLI: %v\nOutput: %s", err, string(out))

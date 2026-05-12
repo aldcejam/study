@@ -28,7 +28,7 @@ FROM alpine:latest
 WORKDIR /app
 
 # Instala apenas o essencial para o runtime, mais nodejs e npm para a gemini CLI
-RUN apk add --no-cache git tzdata ca-certificates nodejs npm && \
+RUN apk add --no-cache git tzdata ca-certificates nodejs npm ripgrep && \
     npm install -g @google/gemini-cli
 
 # Copia os binários compilados do estágio anterior
