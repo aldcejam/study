@@ -87,6 +87,14 @@ func (r *Repository) GetStudySession(ctx context.Context, chatID int64, threadID
 	return shortID, history, err
 }
 
+// GetThreadIDForNote retorna o thread_id de um tópico existente para a nota no chat
+func (r *Repository) GetThreadIDForNote(ctx context.Context, chatID int64, shortID string) (int, error) {
+	var threadID int
+	err := r.pool.QueryRow(ctx, "SELECT thread_id FROM study_sessions WHERE chat_id = $1 AND short_id = $2 LIMIT 1", chatID, shortID).
+		Scan(&threadID)
+	return threadID, err
+}
+
 // UpdateStudySessionHistory atualiza o JSON de histórico do gemini
 func (r *Repository) UpdateStudySessionHistory(ctx context.Context, chatID int64, threadID int, history []byte) error {
 	_, err := r.pool.Exec(ctx, "UPDATE study_sessions SET history = $1 WHERE chat_id = $2 AND thread_id = $3", history, chatID, threadID)

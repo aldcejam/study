@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"study_manager/src/infra/database"
+	"github.com/jackc/pgx/v5"
 )
 
 //go:embed system_prompt.txt
@@ -24,6 +25,20 @@ func HandleStartTopic(repo *database.Repository, shortID string, chatID int64, t
 		log.Printf("Nota não encontrada para o shortID: %s", shortID)
 		sendTopicFunc(token, chatID, 0, "❌ Nota não encontrada.", "")
 		return
+	}
+
+	// Verifica se já existe um tópico para esta nota
+	existingThreadID, err := repo.GetThreadIDForNote(context.Background(), chatID, shortID)
+	if err == nil && existingThreadID != 0 {
+		sendTopicFunc(token, chatID, 0, fmt.Sprintf("⚠️ Já existe um tópico de estudo ativo para a nota **%s**. Acesse-o na lista de tópicos do grupo.", note.Tema), "Markdown")
+		
+		// Opcional: Reenviar uma mensagem no tópico existente para dar um "bump" nele
+		bumpMsg := "🔔 **Retornando aos Estudos**\n\nEste é o tópico ativo para esta nota. O que vamos estudar agora?"
+		sendTopicFunc(token, chatID, existingThreadID, bumpMsg, "Markdown")
+		return
+	}
+	if err != nil && err != pgx.ErrNoRows {
+		log.Printf("Erro ao verificar tópico existente: %v", err)
 	}
 
 	// Limita o nome do tópico a 128 caracteres (limite do Telegram)
