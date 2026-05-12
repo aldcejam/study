@@ -116,10 +116,16 @@ func handleWebhook(dbPath string, token string) http.HandlerFunc {
 		}
 
 		text := update.Message.Text
-		cmd := strings.Split(text, " ")[0]
+		rawCmd := strings.Split(text, " ")[0]
 		chatID := update.Message.Chat.ID
 
-		log.Printf("Command received: %s from %d", cmd, chatID)
+		log.Printf("Command received: %s from %d", rawCmd, chatID)
+
+		// Remove o sufixo @MeusEstudosBot (ou qualquer outro bot) em grupos
+		cmd := rawCmd
+		if idx := strings.Index(cmd, "@"); idx != -1 {
+			cmd = cmd[:idx]
+		}
 
 		// Roteamento dos comandos
 		switch {
