@@ -1,13 +1,13 @@
 package main
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -15,9 +15,6 @@ import (
 	"study_manager/src/infra/database"
 	"study_manager/src/utils/dates"
 	"study_manager/src/utils/models"
-
-	"github.com/ostafen/clover/v2/document"
-	"github.com/ostafen/clover/v2/query"
 )
 
 const bigFuture = 9999
@@ -29,30 +26,7 @@ func abs(x int) int {
 	return x
 }
 
-func shouldNotify(note models.SummaryNotificationOutput, notifDoc *database.NotificationDoc) bool {
-	if notifDoc == nil || notifDoc.LastNotifiedAt == nil {
-		return true
-	}
 
-	lastNotified, err1 := time.Parse(time.RFC3339, *notifDoc.LastNotifiedAt)
-	updatedAt, err2 := time.Parse(time.RFC3339, note.UpdatedAt)
-
-	if err1 != nil || err2 != nil {
-		return true
-	}
-
-	// Compara via Unix para evitar problemas de precisão/fuso no parsing
-	if updatedAt.Unix() > lastNotified.Unix() {
-		return true
-	}
-
-	// Regra de 48h
-	if time.Since(lastNotified).Hours() >= 48 {
-		return true
-	}
-
-	return false
-}
 
 func formatMessage(aNotificar []models.SummaryNotificationOutput) string {
 	if len(aNotificar) == 0 {
@@ -120,20 +94,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	selfDir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	// Sobe um nível para sair de bin/ e chegar na raiz do projeto, depois entra em output/
-	dbPath := filepath.Join(selfDir, "..", "output", "clover_db")
-	db, err := database.InitDB(dbPath)
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		connStr = "postgres://study_user:study_password@localhost:5432/study_db?sslmode=disable"
+	}
+	pool, err := database.InitDB(connStr)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "summaryNotification: erro ao inicializar CloverDB:", err)
+		fmt.Fprintln(os.Stderr, "summaryNotification: erro ao inicializar PostgreSQL:", err)
 		os.Exit(1)
 	}
-	defer db.Close()
+	defer pool.Close()
 
 	var urgentes []models.SummaryNotificationOutput
 	var aNotificar []models.SummaryNotificationOutput
 	today := time.Now().Truncate(24 * time.Hour)
-	nowStr := time.Now().Format(time.RFC3339)
 
 	for _, note := range notes {
 		// 1. Calcular ShortID (usado no banco e na notificação)
@@ -182,93 +156,77 @@ func main() {
 			StatusRevisao: status,
 		}
 
-		// 3. Atualizar tabela `notes`
-		noteDocs, _ := db.FindAll(query.NewQuery("notes").Where(query.Field("relative_path").Eq(note.RelativePath)))
-		var createdAt time.Time
-		if len(noteDocs) > 0 {
-			var existingNote database.NoteDoc
-			noteDocs[0].Unmarshal(&existingNote)
-			createdAt = existingNote.CreatedAt
-		} else {
-			createdAt = time.Now()
+		// 3. Atualizar tabela `notes` (Upsert)
+		var updatedAtTime *time.Time
+		if t, err := time.Parse(time.RFC3339, note.UpdatedAt); err == nil {
+			updatedAtTime = &t
 		}
+		
+		revisoesJson, _ := json.Marshal(note.Revisoes)
+		referencesJson, _ := json.Marshal(note.References)
+		homeworkJson, _ := json.Marshal(note.Homework)
 
-		newNoteDoc := database.NoteDoc{
-			ScannerOutput: note,
-			ShortID:       shortID,
-			CreatedAt:     createdAt,
-		}
+		_, err := pool.Exec(context.Background(), `
+			INSERT INTO notes (filename, relative_path, short_id, tema, subtema, revisoes, "references", homework, tags, activity, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			ON CONFLICT (relative_path) DO UPDATE SET
+				filename = EXCLUDED.filename,
+				short_id = EXCLUDED.short_id,
+				tema = EXCLUDED.tema,
+				subtema = EXCLUDED.subtema,
+				revisoes = EXCLUDED.revisoes,
+				"references" = EXCLUDED."references",
+				homework = EXCLUDED.homework,
+				tags = EXCLUDED.tags,
+				activity = EXCLUDED.activity,
+				updated_at = EXCLUDED.updated_at
+		`, note.Filename, note.RelativePath, shortID, note.Tema, note.Subtema, revisoesJson, referencesJson, homeworkJson, note.Tags, note.Activity, updatedAtTime)
 
-		docMap := make(map[string]interface{})
-		b, _ := json.Marshal(newNoteDoc)
-		json.Unmarshal(b, &docMap)
-		docMap["short_id"] = shortID // Garantia extra
-
-		if len(noteDocs) > 0 {
-			err := db.Update(query.NewQuery("notes").Where(query.Field("_id").Eq(noteDocs[0].ObjectId())), docMap)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "ERRO ao atualizar nota: %v\n", err)
-			}
-		} else {
-			doc := document.NewDocumentOf(docMap)
-			_, err := db.InsertOne("notes", doc)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "ERRO ao inserir nota: %v\n", err)
-			}
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "ERRO ao atualizar nota %s: %v\n", note.RelativePath, err)
 		}
 
 		// 4. Checar tabela `notifications`
-		var notifDoc *database.NotificationDoc
-		notifDocs, _ := db.FindAll(query.NewQuery("notifications").Where(query.Field("relative_path").Eq(note.RelativePath)))
-		if len(notifDocs) > 0 {
-			var existingNotif database.NotificationDoc
-			notifDocs[0].Unmarshal(&existingNotif)
-			notifDoc = &existingNotif
-		}
+		var lastNotifiedAt *time.Time
+		var notifCompleted bool
+
+		err = pool.QueryRow(context.Background(), "SELECT last_notified_at, completed FROM notifications WHERE relative_path = $1", note.RelativePath).Scan(&lastNotifiedAt, &notifCompleted)
 
 		shouldNotifyNow := false
 		if !completed {
 			if status == "ATRASADA" || status == "HOJE" {
 				urgentes = append(urgentes, pn)
-				shouldNotifyNow = shouldNotify(pn, notifDoc)
+				
+				if lastNotifiedAt == nil {
+					shouldNotifyNow = true
+				} else {
+					if updatedAtTime != nil && updatedAtTime.Unix() > lastNotifiedAt.Unix() {
+						shouldNotifyNow = true
+					} else if time.Since(*lastNotifiedAt).Hours() >= 48 {
+						shouldNotifyNow = true
+					}
+				}
 			}
 		}
 
 		// 5. Preparar para notificar e atualizar `notifications`
 		if shouldNotifyNow {
 			aNotificar = append(aNotificar, pn)
+			now := time.Now()
+			lastNotifiedAt = &now
 		}
 
-		newNotif := database.NotificationDoc{
-			RelativePath:   note.RelativePath,
-			Completed:      completed,
-			LastNotifiedAt: nil,
-		}
+		// UPSERT notification
+		_, err = pool.Exec(context.Background(), `
+			INSERT INTO notifications (relative_path, last_notified_at, completed)
+			VALUES ($1, $2, $3)
+			ON CONFLICT (relative_path) DO UPDATE SET
+				last_notified_at = EXCLUDED.last_notified_at,
+				completed = EXCLUDED.completed
+		`, note.RelativePath, lastNotifiedAt, completed)
 
-		if notifDoc != nil {
-			newNotif.LastNotifiedAt = notifDoc.LastNotifiedAt
-		}
-
-		if shouldNotifyNow {
-			// Update the time since we will notify
-			newNotif.LastNotifiedAt = &nowStr
-		}
-
-		notifMap := make(map[string]interface{})
-		b2, _ := json.Marshal(newNotif)
-		json.Unmarshal(b2, &notifMap)
-
-		if len(notifDocs) > 0 {
-			err := db.Update(query.NewQuery("notifications").Where(query.Field("_id").Eq(notifDocs[0].ObjectId())), notifMap)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "ERRO ao atualizar notificação: %v\n", err)
-			}
-		} else {
-			doc := document.NewDocumentOf(notifMap)
-			_, err := db.InsertOne("notifications", doc)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "ERRO ao inserir notificação: %v\n", err)
-			}
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "ERRO ao atualizar notificação %s: %v\n", note.RelativePath, err)
 		}
 	}
 

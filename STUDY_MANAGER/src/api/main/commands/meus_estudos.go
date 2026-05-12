@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"path/filepath"
@@ -8,8 +9,6 @@ import (
 	"strings"
 
 	"study_manager/src/infra/database"
-
-	"github.com/ostafen/clover/v2/query"
 )
 
 type TreeNode struct {
@@ -56,34 +55,35 @@ func RenderTree(node *TreeNode, level int, sb *strings.Builder, escapeFunc func(
 }
 
 // HandleMeusEstudos processa a árvore de notas
-func HandleMeusEstudos(dbPath string, syncFunc func() error, sendFunc func(int64, string, string) error, escapeFunc func(string) string, chatID int64) {
+func HandleMeusEstudos(connStr string, syncFunc func() error, sendFunc func(int64, string, string) error, escapeFunc func(string) string, chatID int64) {
 	if err := syncFunc(); err != nil {
 		log.Printf("Sync error: %v", err)
 	}
 
-	db, err := database.InitDB(dbPath)
+	pool, err := database.InitDB(connStr)
 	if err != nil {
 		log.Printf("DB error: %v", err)
 		sendFunc(chatID, "❌ Erro ao acessar o banco de dados.", "")
 		return
 	}
-	defer db.Close()
+	defer pool.Close()
 
-	docs, err := db.FindAll(query.NewQuery("notes"))
+	rows, err := pool.Query(context.Background(), "SELECT relative_path, tema, short_id FROM notes")
 	if err != nil {
 		log.Printf("Query error: %v", err)
 		return
 	}
+	defer rows.Close()
 
 	root := NewTreeNode("Raiz", true, "")
 
-	for _, doc := range docs {
-		var note database.NoteDoc
-		if err := doc.Unmarshal(&note); err != nil {
+	for rows.Next() {
+		var relativePath, tema, shortID string
+		if err := rows.Scan(&relativePath, &tema, &shortID); err != nil {
 			continue
 		}
 
-		normalizedPath := filepath.ToSlash(note.RelativePath)
+		normalizedPath := filepath.ToSlash(relativePath)
 		parts := strings.Split(normalizedPath, "/")
 
 		current := root
@@ -93,14 +93,14 @@ func HandleMeusEstudos(dbPath string, syncFunc func() error, sendFunc func(int64
 			}
 			isLast := i == len(parts)-1
 			displayName := part
-			shortID := ""
+			nodeShortID := ""
 			if isLast {
-				displayName = note.Tema
-				shortID = note.ShortID
+				displayName = tema
+				nodeShortID = shortID
 			}
 
 			if _, exists := current.Children[displayName]; !exists {
-				current.Children[displayName] = NewTreeNode(displayName, !isLast, shortID)
+				current.Children[displayName] = NewTreeNode(displayName, !isLast, nodeShortID)
 			}
 			current = current.Children[displayName]
 		}

@@ -39,9 +39,9 @@ func main() {
 		log.Fatal("TELEGRAM_TOKEN not found")
 	}
 
-	dbPath := os.Getenv("DB_PATH")
-	if dbPath == "" {
-		dbPath = "./output/clover_db"
+	dbUrl := os.Getenv("DATABASE_URL")
+	if dbUrl == "" {
+		dbUrl = "postgres://study_user:study_password@localhost:5432/study_db?sslmode=disable"
 	}
 
 	port := os.Getenv("PORT")
@@ -59,8 +59,8 @@ func main() {
 		fmt.Fprint(w, "🚀 Study Manager API is up and running!")
 	})
 
-	// Telegram Webhook Route - Passamos o dbPath para que o handler abra o banco sob demanda
-	http.HandleFunc("/webhook", handleWebhook(dbPath, token))
+	// Telegram Webhook Route - Passamos o dbUrl para que o handler abra o pool sob demanda
+	http.HandleFunc("/webhook", handleWebhook(dbUrl, token))
 
 	certFile := os.Getenv("CERT_FILE")
 	keyFile := os.Getenv("KEY_FILE")

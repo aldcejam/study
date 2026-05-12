@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -10,8 +11,6 @@ import (
 	"strings"
 
 	"study_manager/src/infra/database"
-
-	"github.com/ostafen/clover/v2/query"
 )
 
 // Estruturas locais para o teclado inline (para evitar importação do main)
@@ -26,23 +25,21 @@ type InlineKeyboardMarkup struct {
 }
 
 // HandleVerMenu envia as opções de menu (botões inline) quando se clica em /ver_ID
-func HandleVerMenu(dbPath string, shortID string, sendFunc func(int64, string, string) error, menuSenderFunc func(int64, string, string, string) error, chatID int64) {
-	db, err := database.InitDB(dbPath)
+func HandleVerMenu(connStr string, shortID string, sendFunc func(int64, string, string) error, menuSenderFunc func(int64, string, string, string) error, chatID int64) {
+	pool, err := database.InitDB(connStr)
 	if err != nil {
 		return
 	}
-	defer db.Close()
+	defer pool.Close()
 
-	doc, err := db.FindFirst(query.NewQuery("notes").Where(query.Field("short_id").Eq(shortID)))
-	if err != nil || doc == nil {
+	var tema string
+	err = pool.QueryRow(context.Background(), "SELECT tema FROM notes WHERE short_id = $1", shortID).Scan(&tema)
+	if err != nil {
 		sendFunc(chatID, "❌ Nota não encontrada.", "")
 		return
 	}
 
-	var note database.NoteDoc
-	doc.Unmarshal(&note)
-
-	text := fmt.Sprintf("📖 <b>%s</b>\nEscolha o que deseja visualizar:", note.Tema)
+	text := fmt.Sprintf("📖 <b>%s</b>\nEscolha o que deseja visualizar:", tema)
 
 	keyboard := InlineKeyboardMarkup{
 		InlineKeyboard: [][]InlineKeyboardButton{
@@ -71,32 +68,30 @@ func HandleVerMenu(dbPath string, shortID string, sendFunc func(int64, string, s
 }
 
 // HandleViewContent envia o conteúdo bruto da nota (antigo comportamento do ver_nota)
-func HandleViewContent(dbPath string, shortID string, sendFunc func(int64, string, string) error, chatID int64) {
-	db, err := database.InitDB(dbPath)
+func HandleViewContent(connStr string, shortID string, sendFunc func(int64, string, string) error, chatID int64) {
+	pool, err := database.InitDB(connStr)
 	if err != nil {
 		return
 	}
-	defer db.Close()
+	defer pool.Close()
 
-	doc, err := db.FindFirst(query.NewQuery("notes").Where(query.Field("short_id").Eq(shortID)))
-	if err != nil || doc == nil {
+	var relativePath, filename string
+	err = pool.QueryRow(context.Background(), "SELECT relative_path, filename FROM notes WHERE short_id = $1", shortID).Scan(&relativePath, &filename)
+	if err != nil {
 		sendFunc(chatID, "❌ Nota não encontrada.", "")
 		return
 	}
-
-	var note database.NoteDoc
-	doc.Unmarshal(&note)
 
 	vaultRoot := os.Getenv("VAULT_PATH")
 	if vaultRoot == "" {
 		vaultRoot, _ = filepath.Abs("..")
 	}
-	fullPath := filepath.Join(vaultRoot, note.RelativePath, note.Filename)
+	fullPath := filepath.Join(vaultRoot, relativePath, filename)
 
 	content, err := os.ReadFile(fullPath)
 	if err != nil {
 		log.Printf("Read error: %v", err)
-		sendFunc(chatID, fmt.Sprintf("❌ Erro ao ler arquivo: %s", note.Filename), "")
+		sendFunc(chatID, fmt.Sprintf("❌ Erro ao ler arquivo: %s", filename), "")
 		return
 	}
 
@@ -106,30 +101,32 @@ func HandleViewContent(dbPath string, shortID string, sendFunc func(int64, strin
 }
 
 // HandleViewList resolve os caminhos das atividades ou referências e envia em forma de botões
-func HandleViewList(dbPath string, shortID string, listType string, menuSenderFunc func(int64, string, string, string) error, chatID int64) {
-	db, err := database.InitDB(dbPath)
+func HandleViewList(connStr string, shortID string, listType string, menuSenderFunc func(int64, string, string, string) error, chatID int64) {
+	pool, err := database.InitDB(connStr)
 	if err != nil {
 		return
 	}
-	defer db.Close()
+	defer pool.Close()
 
-	doc, err := db.FindFirst(query.NewQuery("notes").Where(query.Field("short_id").Eq(shortID)))
-	if err != nil || doc == nil {
+	var homeworkBytes, referencesBytes []byte
+	err = pool.QueryRow(context.Background(), "SELECT homework, references FROM notes WHERE short_id = $1", shortID).Scan(&homeworkBytes, &referencesBytes)
+	if err != nil {
 		return
 	}
-
-	var note database.NoteDoc
-	doc.Unmarshal(&note)
 
 	var list interface{}
 	var title string
 	var prefix string
 	if listType == "homework" {
-		list = note.Homework
+		if len(homeworkBytes) > 0 {
+			json.Unmarshal(homeworkBytes, &list)
+		}
 		title = "📝 <b>Atividades Disponíveis</b>"
 		prefix = "open_hw"
 	} else if listType == "references" {
-		list = note.References
+		if len(referencesBytes) > 0 {
+			json.Unmarshal(referencesBytes, &list)
+		}
 		title = "🔗 <b>Referências Disponíveis</b>"
 		prefix = "open_ref"
 	}
@@ -177,27 +174,30 @@ func HandleViewList(dbPath string, shortID string, listType string, menuSenderFu
 }
 
 // HandleOpenFileByIndex abre um arquivo da lista (homework ou references) usando o índice
-func HandleOpenFileByIndex(dbPath string, shortID string, index int, listType string, sendFunc func(int64, string, string) error, chatID int64) {
-	db, err := database.InitDB(dbPath)
+func HandleOpenFileByIndex(connStr string, shortID string, index int, listType string, sendFunc func(int64, string, string) error, chatID int64) {
+	pool, err := database.InitDB(connStr)
 	if err != nil {
 		return
 	}
-	defer db.Close()
+	defer pool.Close()
 
-	doc, err := db.FindFirst(query.NewQuery("notes").Where(query.Field("short_id").Eq(shortID)))
-	if err != nil || doc == nil {
+	var relativePath string
+	var homeworkBytes, referencesBytes []byte
+	err = pool.QueryRow(context.Background(), "SELECT relative_path, homework, references FROM notes WHERE short_id = $1", shortID).Scan(&relativePath, &homeworkBytes, &referencesBytes)
+	if err != nil {
 		sendFunc(chatID, "❌ Nota original não encontrada.", "")
 		return
 	}
 
-	var note database.NoteDoc
-	doc.Unmarshal(&note)
-
 	var list interface{}
 	if listType == "homework" {
-		list = note.Homework
+		if len(homeworkBytes) > 0 {
+			json.Unmarshal(homeworkBytes, &list)
+		}
 	} else {
-		list = note.References
+		if len(referencesBytes) > 0 {
+			json.Unmarshal(referencesBytes, &list)
+		}
 	}
 
 	itemsArray, ok := list.([]interface{})
@@ -230,7 +230,7 @@ func HandleOpenFileByIndex(dbPath string, shortID string, index int, listType st
 	if vaultRoot == "" {
 		vaultRoot, _ = filepath.Abs("..")
 	}
-	baseNoteDir := filepath.Join(vaultRoot, note.RelativePath)
+	baseNoteDir := filepath.Join(vaultRoot, relativePath)
 	fullPath := filepath.Join(baseNoteDir, targetPath)
 
 	content, err := os.ReadFile(fullPath)
