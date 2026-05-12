@@ -19,7 +19,7 @@ import (
 var systemPrompt string
 
 // HandleStartTopic carrega a nota, cria um tópico e salva a sessão de estudo.
-func HandleStartTopic(dbPath string, shortID string, chatID int64, token string, createTopicFunc func(string, int64, string) (int, error), sendTopicFunc func(string, int64, int, string, string) error) {
+func HandleStartTopic(dbPath string, shortID string, chatID int64, token string, createTopicFunc func(string, int64, string) (int, error), sendTopicFunc func(string, int64, int, string, string) (int, error)) {
 	db, err := database.InitDB(dbPath)
 	if err != nil {
 		log.Printf("DB Error: %v", err)
@@ -68,7 +68,7 @@ func HandleStartTopic(dbPath string, shortID string, chatID int64, token string,
 }
 
 // HandleTopicMessage processa mensagens enviadas em tópicos.
-func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, token string, sendTopicFunc func(string, int64, int, string, string) error) {
+func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, token string, sendTopicFunc func(string, int64, int, string, string) (int, error), editTopicMessageFunc func(string, int64, int, string, string) error) {
 	db, err := database.InitDB(dbPath)
 	if err != nil {
 		return
@@ -89,6 +89,9 @@ func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, 
 	prompt := buildPrompt(contentStr, history, text)
 	history = append(history, "Usuário: "+text)
 
+	// Envia mensagem de loading e pega o ID
+	msgID, _ := sendTopicFunc(token, chatID, threadID, "🤔 *Pensando...* ⏳", "Markdown")
+
 	responseStr, err := invokeGeminiCLI(prompt)
 	if err != nil {
 		responseStr = "Desculpe, ocorreu um erro ao processar sua resposta via Gemini CLI."
@@ -97,7 +100,11 @@ func HandleTopicMessage(dbPath string, chatID int64, threadID int, text string, 
 	history = append(history, "Tutor: "+responseStr)
 	saveHistory(db, doc, history)
 
-	sendTopicFunc(token, chatID, threadID, responseStr, "Markdown")
+	if msgID != 0 {
+		editTopicMessageFunc(token, chatID, msgID, responseStr, "Markdown")
+	} else {
+		sendTopicFunc(token, chatID, threadID, responseStr, "Markdown")
+	}
 }
 
 // Helpers

@@ -151,7 +151,7 @@ func createForumTopic(token string, chatID int64, name string) (int, error) {
 }
 
 // sendTelegramMessageToTopic envia uma mensagem para um tópico específico
-func sendTelegramMessageToTopic(token string, chatID int64, threadID int, text string, parseMode string) error {
+func sendTelegramMessageToTopic(token string, chatID int64, threadID int, text string, parseMode string) (int, error) {
 	if len(text) > 4000 {
 		text = text[:3997] + "..."
 	}
@@ -168,13 +168,54 @@ func sendTelegramMessageToTopic(token string, chatID int64, threadID int, text s
 
 	resp, err := http.PostForm(apiURL, payload)
 	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return 0, fmt.Errorf("telegram topic error: %s", string(body))
+	}
+	
+	var result struct {
+		Ok     bool `json:"ok"`
+		Result struct {
+			MessageID int `json:"message_id"`
+		} `json:"result"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return 0, err
+	}
+
+	return result.Result.MessageID, nil
+}
+
+// editTelegramMessageText edita o texto de uma mensagem já enviada
+func editTelegramMessageText(token string, chatID int64, messageID int, text string, parseMode string) error {
+	if len(text) > 4000 {
+		text = text[:3997] + "..."
+	}
+
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/editMessageText", token)
+	payload := url.Values{
+		"chat_id":    {fmt.Sprintf("%d", chatID)},
+		"message_id": {fmt.Sprintf("%d", messageID)},
+		"text":       {text},
+	}
+	if parseMode != "" {
+		payload.Set("parse_mode", parseMode)
+	}
+
+	resp, err := http.PostForm(apiURL, payload)
+	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("telegram topic error: %s", string(body))
+		return fmt.Errorf("telegram edit error: %s", string(body))
 	}
 	return nil
 }
