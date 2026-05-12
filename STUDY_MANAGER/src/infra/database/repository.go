@@ -95,6 +95,12 @@ func (r *Repository) GetThreadIDForNote(ctx context.Context, chatID int64, short
 	return threadID, err
 }
 
+// DeleteStudySession deleta a sessão de estudos associada a um tópico que não existe mais
+func (r *Repository) DeleteStudySession(ctx context.Context, chatID int64, threadID int) error {
+	_, err := r.pool.Exec(ctx, "DELETE FROM study_sessions WHERE chat_id = $1 AND thread_id = $2", chatID, threadID)
+	return err
+}
+
 // UpdateStudySessionHistory atualiza o JSON de histórico do gemini
 func (r *Repository) UpdateStudySessionHistory(ctx context.Context, chatID int64, threadID int, history []byte) error {
 	_, err := r.pool.Exec(ctx, "UPDATE study_sessions SET history = $1 WHERE chat_id = $2 AND thread_id = $3", history, chatID, threadID)

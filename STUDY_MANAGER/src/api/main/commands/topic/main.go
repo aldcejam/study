@@ -30,12 +30,19 @@ func HandleStartTopic(repo *database.Repository, shortID string, chatID int64, t
 	// Verifica se já existe um tópico para esta nota
 	existingThreadID, err := repo.GetThreadIDForNote(context.Background(), chatID, shortID)
 	if err == nil && existingThreadID != 0 {
-		sendTopicFunc(token, chatID, 0, fmt.Sprintf("⚠️ Já existe um tópico de estudo ativo para a nota **%s**. Acesse-o na lista de tópicos do grupo.", note.Tema), "Markdown")
-		
-		// Opcional: Reenviar uma mensagem no tópico existente para dar um "bump" nele
+		// Tenta enviar o "bump" para ver se o tópico ainda existe
 		bumpMsg := "🔔 **Retornando aos Estudos**\n\nEste é o tópico ativo para esta nota. O que vamos estudar agora?"
-		sendTopicFunc(token, chatID, existingThreadID, bumpMsg, "Markdown")
-		return
+		_, sendErr := sendTopicFunc(token, chatID, existingThreadID, bumpMsg, "Markdown")
+		
+		if sendErr == nil {
+			// Sucesso: Tópico existe
+			sendTopicFunc(token, chatID, 0, fmt.Sprintf("⚠️ Já existe um tópico de estudo ativo para a nota **%s**. Acesse-o na lista de tópicos do grupo.", note.Tema), "Markdown")
+			return
+		}
+		
+		// Falha: O tópico provavelmente foi deletado no Telegram
+		log.Printf("Erro ao enviar bump para o tópico %d (provavelmente deletado). Recriando... (Erro: %v)", existingThreadID, sendErr)
+		repo.DeleteStudySession(context.Background(), chatID, existingThreadID)
 	}
 	if err != nil && err != pgx.ErrNoRows {
 		log.Printf("Erro ao verificar tópico existente: %v", err)
