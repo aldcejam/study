@@ -1,7 +1,0 @@
-bin/
-output/
-*.test
-*.out
-
-.env
-id_ed25519
