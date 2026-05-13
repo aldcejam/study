@@ -1,7 +1,7 @@
 ---
 tema: Arquitetura Client-Server
 revision_18-04-2026: true
-revision_28-04-2026: false
+revision_29-04-2026: false
 references:
   - link_1: https://google.com
   - path_1: ./references/client-server-referencia.pdf
