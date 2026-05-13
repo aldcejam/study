@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -80,13 +81,41 @@ func (r *Repository) UpsertStudySession(ctx context.Context, chatID int64, threa
 	return err
 }
 
-// GetStudySession retorna os dados de uma sessão de estudo ativa
+// GetStudySession retorna os dados de uma sessão de estudo ativa. Se for um fork, resolve o shortID buscando recursivamente o pai.
 func (r *Repository) GetStudySession(ctx context.Context, chatID int64, threadID int) (string, []byte, error) {
-	var shortID string
+	var shortID *string
+	var parentThreadID *int
 	var history []byte
-	err := r.pool.QueryRow(ctx, "SELECT short_id, history FROM study_sessions WHERE chat_id = $1 AND thread_id = $2", chatID, threadID).
-		Scan(&shortID, &history)
-	return shortID, history, err
+	
+	err := r.pool.QueryRow(ctx, "SELECT short_id, parent_thread_id, history FROM study_sessions WHERE chat_id = $1 AND thread_id = $2", chatID, threadID).
+		Scan(&shortID, &parentThreadID, &history)
+	
+	if err != nil {
+		return "", nil, err
+	}
+
+	finalShortID := ""
+	if shortID != nil {
+		finalShortID = *shortID
+	} else if parentThreadID != nil {
+		finalShortID, _, err = r.GetStudySession(ctx, chatID, *parentThreadID)
+		if err != nil {
+			return "", nil, fmt.Errorf("erro ao buscar sessão pai: %w", err)
+		}
+	} else {
+		return "", nil, fmt.Errorf("sessão corrompida: sem short_id e sem pai")
+	}
+
+	return finalShortID, history, nil
+}
+
+// CreateForkSession clona uma sessão de estudos, apontando para o pai e preservando o histórico.
+func (r *Repository) CreateForkSession(ctx context.Context, chatID int64, parentThreadID int, newThreadID int, history []byte) error {
+	_, err := r.pool.Exec(ctx, `
+		INSERT INTO study_sessions (chat_id, thread_id, parent_thread_id, history)
+		VALUES ($1, $2, $3, $4)
+	`, chatID, newThreadID, parentThreadID, history)
+	return err
 }
 
 // GetThreadIDForNote retorna o thread_id de um tópico existente para a nota no chat

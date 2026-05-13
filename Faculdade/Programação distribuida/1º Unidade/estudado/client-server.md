@@ -6,8 +6,8 @@ references:
   - link_1: https://google.com
   - path_1: ./references/client-server-referencia.pdf
 homework:
-  - path_1: ./homework/client-server-tarefa.md
-  - path_2: ./homework/client-server-tarefa.md
+  - path_1: ./homeworks/client-server-tarefa.md
+  - path_2: ./homeworks/client-server-tarefa.md
 ---
 ## 🧠 Processo de Aprendizado
 ---

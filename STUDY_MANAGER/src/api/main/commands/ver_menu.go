@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"study_manager/src/infra/database"
+	"study_manager/src/infra/formatter"
 )
 
 // Estruturas locais para o teclado inline (para evitar importação do main)
@@ -81,7 +82,8 @@ func HandleViewContent(repo *database.Repository, shortID string, sendFunc func(
 		return
 	}
 
-	if err := sendFunc(chatID, string(content), ""); err != nil {
+	conv := formatter.NewMarkdownConverter()
+	if err := sendFunc(chatID, conv.Convert(string(content)), "HTML"); err != nil {
 		log.Printf("Send content error: %v", err)
 	}
 }
@@ -211,7 +213,8 @@ func HandleOpenFileByIndex(repo *database.Repository, shortID string, index int,
 		return
 	}
 
-	if err := sendFunc(chatID, string(content), ""); err != nil {
+	conv := formatter.NewMarkdownConverter()
+	if err := sendFunc(chatID, conv.Convert(string(content)), "HTML"); err != nil {
 		log.Printf("Send content error: %v", err)
 	}
 }
@@ -238,7 +241,8 @@ func HandleAbrirArquivo(hexPath string, sendFunc func(int64, string, string) err
 		return
 	}
 
-	if err := sendFunc(chatID, string(content), ""); err != nil {
+	conv := formatter.NewMarkdownConverter()
+	if err := sendFunc(chatID, conv.Convert(string(content)), "HTML"); err != nil {
 		log.Printf("Send content error: %v", err)
 	}
 }

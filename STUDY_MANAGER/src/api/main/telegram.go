@@ -127,7 +127,7 @@ func handleWebhook(repo *database.Repository, token string) http.HandlerFunc {
 		}
 
 		if update.Message.MessageThreadID != 0 {
-			go topic.HandleTopicMessage(repo, update.Message.Chat.ID, update.Message.MessageThreadID, update.Message.Text, token, sendTelegramMessageToTopic, editTelegramMessageText, sendChatActionToTopic)
+			go topic.HandleTopicMessage(repo, update.Message.Chat.ID, update.Message.MessageThreadID, update.Message.Text, token, createForumTopic, sendTelegramMessageToTopic, editTelegramMessageText, sendChatActionToTopic)
 			w.WriteHeader(http.StatusOK)
 			return
 		}

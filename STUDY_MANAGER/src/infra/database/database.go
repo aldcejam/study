@@ -63,14 +63,28 @@ func RunMigrations(ctx context.Context, pool *pgxpool.Pool) error {
 		completed BOOLEAN DEFAULT FALSE
 	);
 
-	CREATE TABLE IF NOT EXISTS study_sessions (
-		chat_id BIGINT NOT NULL,
-		thread_id INTEGER NOT NULL,
-		short_id TEXT NOT NULL REFERENCES notes(short_id) ON DELETE CASCADE,
-		history JSONB DEFAULT '[]'::jsonb, 
-		PRIMARY KEY (chat_id, thread_id),
-		CONSTRAINT unique_chat_note UNIQUE (chat_id, short_id)
-	);
+	DO $$ 
+	BEGIN 
+		-- Create the table first to ensure it exists
+		CREATE TABLE IF NOT EXISTS study_sessions (
+			chat_id BIGINT NOT NULL,
+			thread_id INTEGER NOT NULL,
+			short_id TEXT REFERENCES notes(short_id) ON DELETE CASCADE,
+			parent_thread_id INTEGER,
+			history JSONB DEFAULT '[]'::jsonb, 
+			PRIMARY KEY (chat_id, thread_id),
+			CONSTRAINT unique_chat_note UNIQUE (chat_id, short_id),
+			CONSTRAINT fk_parent FOREIGN KEY (chat_id, parent_thread_id) REFERENCES study_sessions(chat_id, thread_id) ON DELETE CASCADE
+		);
+		
+		-- If the table was already there, apply alterations:
+		ALTER TABLE study_sessions ALTER COLUMN short_id DROP NOT NULL;
+		
+		IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='study_sessions' AND column_name='parent_thread_id') THEN
+			ALTER TABLE study_sessions ADD COLUMN parent_thread_id INTEGER;
+			ALTER TABLE study_sessions ADD CONSTRAINT fk_parent FOREIGN KEY (chat_id, parent_thread_id) REFERENCES study_sessions(chat_id, thread_id) ON DELETE CASCADE;
+		END IF;
+	END $$;
 	`
 
 	_, err := pool.Exec(ctx, schema)
