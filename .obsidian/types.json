@@ -29,6 +29,7 @@
     "revision": "date",
     "revision_18-04-2026": "checkbox",
     "revision_20-04-2026": "checkbox",
-    "references": "multitext"
+    "references": "multitext",
+    "za": "multitext"
   }
 }
