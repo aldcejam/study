@@ -2,14 +2,14 @@
 tema: Arquitetura Client-Server
 revision_18-04-2026: true
 revision_29-04-2026: false
-references:
+referencess:
   - link_1: https://google.com
   - path_1: ./references/client-server-referencia.pdf
 homework:
   - path_1: ./homeworks/client-server-tarefa.md
   - path_2: ./homeworks/client-server-tarefa.md
-aaa:
-  - (descrição)[link:"google.com"]
+references:
+  - (link1)[link:"google.com"]
   - (descrição)[path:"./arquivo.md"]
 ---
 ## 🧠 Processo de Aprendizado
