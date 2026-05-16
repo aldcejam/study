@@ -31,6 +31,7 @@
     "revision_20-04-2026": "checkbox",
     "references": "multitext",
     "za": "multitext",
-    "aaa": "multitext"
+    "aaa": "multitext",
+    "homeworks": "multitext"
   }
 }
