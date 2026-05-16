@@ -8,6 +8,9 @@ references:
 homework:
   - path_1: ./homeworks/client-server-tarefa.md
   - path_2: ./homeworks/client-server-tarefa.md
+aaa:
+  - (descrição)[link:"google.com"]
+  - (descrição)[path:"./arquivo.md"]
 ---
 ## 🧠 Processo de Aprendizado
 ---
