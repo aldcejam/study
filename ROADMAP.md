@@ -12,22 +12,34 @@ mindmap
         Gramaticas Formais e Automatos de Pilha
       Logica Matematica
         Logica de Primeira Ordem
-        Metodos Formais de Verificacao - TLA+ e Coq
+        Metodos Formais - TLA+ e Coq
+        Model Checking - SPIN e Alloy
         Calculo Lambda - Base da Funcional
     Sistemas e Infraestrutura de Baixo Nivel
       Arquitetura de Computadores - CMU Style
         Exploracao de Binarios e Representacao de Dados
         Otimizacao de Codigo a Nivel de Assembly
+        Hardware Design - FPGA e Verilog
         Sistemas de Memoria - Cache e Memoria Virtual
-        I-O de Rede e Sinais de Sistema
-      Compiladores e Interpretadores
-        Analise Lexica e Sintatica - AST
-        Geracao de Bytecode e Codigo de Maquina
-        JIT Compilation e Otimizacao de Loop
       Sistemas Operacionais Internals
         Implementacao de Kernels e Drivers
+        Observabilidade de Kernel - eBPF
         Sincronizacao de Threads - Primitivas Liveness
         Virtualizacao e Hypervisors
+      Computacao de Alta Performance
+        Paralelismo Vetorial - SIMD e AVX
+        Programacao GPGPU - CUDA e OpenCL
+        Modelos de Memoria - C++11 e Rust
+    Seguranca de Sistemas
+      Seguranca Ofensiva
+        Memory Corruption e Exploitation
+        Reverse Engineering Avançado
+      Criptografia Moderna
+        Zero-Knowledge Proofs - ZKP
+        Criptografia Pos-Quantica
+      Seguranca de Hardware
+        Trusted Execution Environments - TEE
+        Side-channel Attacks e Mitigacao
     Engenharia de Dados e Algoritmos
       Algoritmos Avancados - MIT Style
         Algoritmos de Amortizacao
@@ -52,9 +64,8 @@ mindmap
         Testes Formais e Property-based Testing
         CI-CD Avançado e GitOps
         Arquitetura Evolucionaria
-      Modelagem de Dominio
-        DDD - Tactical e Strategic Design
+      Inteligencia em Sistemas
+        ML for Systems - Otimizacao via IA
+        Modelagem de Dominio - DDD
         Event Sourcing e CQRS
-        Arquitetura de Microsservicos e Nanosservicos
-
 ```
