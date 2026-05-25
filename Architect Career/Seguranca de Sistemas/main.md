@@ -12,3 +12,4 @@ O foco aqui é na **Segurança Ofensiva** como meio de entender a defesa, e na *
 ## 🗺️ Mapa de Exploração
 - [[./Exploitation Avancada/main|Exploitation Avancada]] -> Overflows, ROP e Bypass de mitigação.
 - [[./Hardware e Side-Channels/main|Hardware e Side-Channels]] -> Spectre, Meltdown e ataques de canal lateral.
+- [[./Seguranca de Aplicacoes e IAM/main|Seguranca de Aplicacoes e IAM]] -> OAuth2, OIDC, JWT, OWASP Top 10 e mTLS.

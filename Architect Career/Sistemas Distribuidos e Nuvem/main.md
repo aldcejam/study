@@ -13,3 +13,6 @@ Exploramos a física dos sistemas (relógios, consenso) e a engenharia de nuvem 
 - [[./Consenso e Concorrencia/main|Consenso e Concorrencia]] -> Paxos, Raft e Relógios Lógicos.
 - [[./Arquitetura de Alta Escala/main|Arquitetura de Alta Escala]] -> Consistent Hashing, Gossip e Tracing.
 - [[./Cloud Native/main|Cloud Native]] -> Kubernetes, Service Mesh e Serverless Internals.
+- [[./Comunicacao e Mensageria/main|Comunicacao e Mensageria]] -> HTTP/3, gRPC, Message Brokers e Kafka.
+- [[./Resiliencia e Confiabilidade/main|Resiliencia e Confiabilidade]] -> Circuit Breaker, Retries, Teoremas CAP e PACELC.
+- [[./Observabilidade Plena e DevOps/main|Observabilidade Plena e DevOps]] -> Métricas (Prometheus), SRE (SLOs) e GitOps.

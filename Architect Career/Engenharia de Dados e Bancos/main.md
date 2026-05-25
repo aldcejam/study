@@ -11,3 +11,4 @@ O arquiteto deve saber escolher a Storage Engine correta para cada carga de trab
 
 ## 🗺️ Mapa de Exploração
 - [[./Database Internals - Stanford Style/main|Database Internals - Stanford Style]] -> Storage Engines, Transações e Query Optimization.
+- [[./Praticas de Bancos de Dados/main|Praticas de Bancos de Dados]] -> Polyglot Persistence e Estratégias de Escala.

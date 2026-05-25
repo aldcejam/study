@@ -91,6 +91,9 @@ Este arquivo rastreia a criação dos arquivos `main.md` para cada nó da árvor
 - [x] Storage e Indexacao (Índice)
 - [x] B plus Trees - Concorrencia via Latching e Locking (UE)
 - [x] Columnar Storage Internals - Parquet e ClickHouse (UE)
+- [ ] Praticas de Bancos de Dados (Índice)
+- [ ] Polyglot Persistence - Escolhendo o Banco Certo (UE)
+- [ ] Estrategias de Escala - Sharding e Replicacao (UE)
 
 ### 📂 Sistemas Distribuidos e Nuvem
 - [x] Consenso e Concorrencia (Índice)
@@ -105,6 +108,18 @@ Este arquivo rastreia a criação dos arquivos `main.md` para cada nó da árvor
 - [x] Kubernetes Internals - API Server e Controller Manager (UE)
 - [x] Service Mesh - Control Plane vs Data Plane - Istio (UE)
 - [x] Serverless Internals - Cold Starts e Isolate Runtimes (UE)
+- [ ] Comunicacao e Mensageria (Índice)
+- [ ] Evolucao Web e RPC - HTTP3 e gRPC (UE)
+- [ ] Message Brokers vs Event Streaming - RabbitMQ e Kafka (UE)
+- [ ] Design de APIs - GraphQL e API Gateway (UE)
+- [ ] Resiliencia e Confiabilidade (Índice)
+- [ ] Padroes de Resiliencia - Circuit Breaker e Retry (UE)
+- [ ] Teoremas CAP e PACELC (UE)
+- [ ] Load Balancing L4 vs L7 (UE)
+- [ ] Observabilidade Plena e DevOps (Índice)
+- [ ] Metricas e Monitoramento - TSDB e Prometheus (UE)
+- [ ] SRE - SLIs SLOs e Error Budgets (UE)
+- [ ] Estrategias de Deploy e GitOps (UE)
 
 ### 📂 Engenharia de Software e Design
 - [x] Domain-Driven Design - DDD (Índice)
@@ -126,6 +141,14 @@ Este arquivo rastreia a criação dos arquivos `main.md` para cada nó da árvor
 - [x] Property-Based Testing com Hypothesis (UE)
 - [x] Mutation Testing e Analise de Cobertura Semantica (UE)
 - [x] Chaos Engineering - Injecao de Falhas em Producao (UE)
+- [ ] Padroes de Microsservicos e Integracao (Índice)
+- [ ] Transacoes Distribuidas - Saga e 2PC (UE)
+- [ ] Enterprise Integration Patterns (UE)
+- [ ] Decomposicao de Monolitos - Strangler Fig (UE)
+- [ ] Lideranca e Praticas Arquiteturais (Índice)
+- [ ] Architecture Decision Records - ADRs (UE)
+- [ ] Modelagem Visual - C4 Model (UE)
+- [ ] System Design e Request for Comments - RFCs (UE)
 
 ### 📂 Seguranca de Sistemas
 - [x] Exploitation Avancada (Índice)
@@ -135,3 +158,7 @@ Este arquivo rastreia a criação dos arquivos `main.md` para cada nó da árvor
 - [x] Hardware e Side-Channels (Índice)
 - [x] Side-Channel Attacks - Meltdown e Spectre (UE)
 - [x] Rowhammer e Ataques em Memoria RAM (UE)
+- [ ] Seguranca de Aplicacoes e IAM (Índice)
+- [ ] Gestao de Identidade - OAuth2 OIDC e JWT (UE)
+- [ ] Seguranca Web - OWASP Top 10 e WAF (UE)
+- [ ] Seguranca em Transito - mTLS e Zero Trust (UE)

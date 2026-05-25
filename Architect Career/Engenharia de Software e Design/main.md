@@ -12,3 +12,5 @@ A conexão aqui é com a **manutenibilidade** e a **extensibilidade**: sistemas 
 ## 🗺️ Mapa de Exploração
 - [[./Domain-Driven Design - DDD/main|Domain-Driven Design - DDD]] -> O pilar central da modelagem de software complexo.
 - [[./Qualidade e Processos/main|Qualidade e Processos]] -> Testes baseados em propriedades e engenharia do caos.
+- [[./Padroes de Microsservicos e Integracao/main|Padroes de Microsservicos e Integracao]] -> Saga, EIP e Strangler Fig.
+- [[./Lideranca e Praticas Arquiteturais/main|Lideranca e Praticas Arquiteturais]] -> ADRs, C4 Model e System Design.
