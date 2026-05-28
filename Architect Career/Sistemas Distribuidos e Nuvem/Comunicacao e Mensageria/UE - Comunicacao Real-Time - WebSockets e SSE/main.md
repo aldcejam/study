@@ -2,6 +2,11 @@
 tema: Comunicação Real-Time - WebSockets e SSE
 tipo: unidade-estudo
 tags: [real-time, websockets, sse, tcp, concurrencia]
+sequencia:
+  - "[[Diferenciacao entre SSE, Long Polling e WS - Teoria e Fundamentos]]"
+  - "[[Multiplexacao C10K via epoll e Estrutura dos Frames Binarios - Funcionamento Interno e Arquitetura]]"
+  - "[[Reconexao em Massa Thundering Herd e Stateful Drops - Casos de Falha e Análise Amortizada]]"
+  - "[[Implementacao de Milhoes de Sockets Ociosos em ErlangGo - Implementacao de Referencia e Benchmarks]]"
 ---
 # 🧪 UE - Comunicação Real-Time - WebSockets e SSE
 
