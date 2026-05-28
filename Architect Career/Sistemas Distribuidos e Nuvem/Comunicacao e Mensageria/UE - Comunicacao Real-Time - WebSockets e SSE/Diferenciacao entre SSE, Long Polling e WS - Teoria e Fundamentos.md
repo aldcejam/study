@@ -15,7 +15,6 @@ homework:
 ---
 
 ## 📝 Meu Resumo (Feynman)
-
 Explicar Diferenciação entre SSE, Long Polling e WS - Teoria e Fundamentos em linguagem simples, como se ensinasse a alguém:
 
 ---
@@ -40,12 +39,11 @@ Responda sem consultar o material:
 ---
 ## 🔎 Perguntas de Elaboração
 
+* O que é polling, long-polling, qual a diferença entre as duas e em quais contextos faz sentido aplica-las
 * Por que você escolheria SSE ao invés de WebSockets para implementar um feed ou dashboard financeiro?
 * Em que cenários extremos ou restritivos o Long Polling ainda seria justificável no desenvolvimento web atual?
 * Explique detalhadamente o custo oculto de manter milhares de threads bloqueadas (I/O bloqueante) aguardando respostas no modelo de Long Polling.
-
 ---
-
 ## 🔗 Conexões
 
 Relacionar com outros tópicos:
