@@ -1,11 +1,11 @@
 ---
-não iniciado-tema: Diferenciação entre SSE, Long Polling e WS - Teoria e Fundamentos
-revision_29-05-2026: false
-revision_30-05-2026: false
+tema: Diferenciação entre SSE, Long Polling e WS - Teoria e Fundamentos
+revision_31-05-2026: false
+revision_01-06-2026: false
 revision_04-06-2026: false
-revision_27-06-2026: false
-revision_26-08-2026: false
-revision_25-10-2026: false
+revision_11-06-2026: false
+revision_25-06-2026: false
+revision_25-07-2026: false
 references:
   - 
 homework:
@@ -25,7 +25,7 @@ Checklist:
 * [ ] Identificar lacunas
 * [ ] Atualizar resumo
 
----
+--- 
 
 ## ❓ Teste-se (Active Recall)
 
