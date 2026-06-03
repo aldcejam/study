@@ -17,7 +17,13 @@ homework:
 ## 📝 Meu Resumo (Feynman)
 - **WebSockets (WS)**:
   - **Direcionalidade**: Bidirecional (full-duplex) simultâneo. Tanto cliente quanto servidor transmitem dados a qualquer momento.
-  - **Protocolo**: Inicia via handshake HTTP (`Upgrade: websocket`) e transiciona para o protocolo WebSocket independente sobre TCP (HTTP status `101 Switching Protocols`).
+  - **Protocolo & Handshake**:
+    - Negociação inicial via requisição HTTP com os headers `Upgrade: websocket` e `Connection: Upgrade`.
+    - Resposta do servidor com status `101 Switching Protocols` autoriza a mudança de protocolo.
+    - Reutiliza o socket TCP existente, mudando apenas a forma de ler/escrever no canal.
+  - **Transição de Frame**:
+    - Abandona a formatação HTTP estruturada (Headers/Body) e adota um protocolo de enquadramento binário (frames leves).
+    - Utiliza frames de controle `Ping` e `Pong` para manter a conexão aberta (keep-alive) e evitar timeouts de intermediários.
 - **Server-Sent Events (SSE)**:
   - **Direcionalidade**: Unidirecional (downlink). Apenas o servidor envia dados após a conexão inicial do cliente.
   - **Protocolo**: Mantém-se sob o protocolo HTTP padrão usando o cabeçalho `Content-Type: text/event-stream` e conexão persistente (`keep-alive`).
