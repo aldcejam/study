@@ -25,8 +25,14 @@ homework:
     - Abandona a formatação HTTP estruturada (Headers/Body) e adota um protocolo de enquadramento binário (frames leves).
     - Utiliza frames de controle `Ping` e `Pong` para manter a conexão aberta (keep-alive) e evitar timeouts de intermediários.
 - **Server-Sent Events (SSE)**:
-  - **Direcionalidade**: Unidirecional (downlink). Apenas o servidor envia dados após a conexão inicial do cliente.
-  - **Protocolo**: Mantém-se sob o protocolo HTTP padrão usando o cabeçalho `Content-Type: text/event-stream` e conexão persistente (`keep-alive`).
+  - **Direcionalidade**: Unidirecional (downlink). Apenas o servidor envia dados de forma contínua para o cliente.
+  - **Protocolo & Transporte**:
+    - Baseado em HTTP tradicional usando cabeçalhos específicos (`Content-Type: text/event-stream`, `Cache-Control: no-cache`, `Connection: keep-alive`).
+  - **Gargalo no HTTP/1.1**:
+    - Os navegadores limitam a concorrência a 6 conexões por domínio.
+    - Como o SSE mantém a conexão aberta, 6 conexões SSE ativas em abas diferentes esgotam o pool do navegador, travando qualquer nova requisição ao mesmo domínio.
+  - **Eficiência sob HTTP/2**:
+    - O HTTP/2 resolve esse problema através da multiplexação nativa de streams (compartilhando a mesma conexão TCP com pacotes identificados por IDs), eliminando o limite físico de 6 conexões.
 
 ---
 ## 🎤 Explicação em Voz
