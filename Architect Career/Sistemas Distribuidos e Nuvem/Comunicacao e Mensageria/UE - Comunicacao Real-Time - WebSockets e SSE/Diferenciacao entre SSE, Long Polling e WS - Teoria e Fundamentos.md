@@ -49,6 +49,19 @@ Checklist:
 ---
 ## 🌍 English Explanation Check
 
+### 🗣️ English Practice: Testing Multiplexing Explanation
+- **Transcript**: "Now, we test the skill and when I explain the HTTP I don't improve... expliquei muito bem, não expliquei muito bem, I don't speak very well the multiplexing, the network multiplexing that the WebSocket when the HTTP 1 the creation... create a... a new... reproveita, reproveita... the same connection but the connection is a unique connection TCP but the HTTP 2 the connection with network multiplexing is... desconcentrei."
+- **Corrections**:
+  - *[Original]* "we test the skill" -> *[Corrected]* "we are testing the skill" / "let's test the skill": Use o *Present Continuous* para ações acontecendo agora.
+  - *[Original]* "I don't improve" / "I don't speak very well" -> *[Corrected]* "I couldn't explain it very well": Para expressar que não conseguiu fazer algo no passado, use "couldn't".
+  - *[Original]* "reproveita" -> *[Corrected]* "reuses": O verbo para "reaproveitar" é "to reuse".
+  - *[Original]* "unique connection TCP" -> *[Corrected]* "single TCP connection": Adjetivos vêm antes dos substantivos. E "single" encaixa melhor que "unique" nesse contexto.
+  - *[Original]* "desconcentrei" -> *[Corrected]* "I lost my focus" / "I got distracted": Frases muito úteis para quando se perde o fio da meada.
+- **Study Debts**:
+  - Vocabulary: "To reuse" (reaproveitar), "To lose focus / Get distracted" (desconcentrar).
+  - Grammar: Past ability ("couldn't" vs "don't").
+  - Word Order: Adjective before Noun ("single TCP connection" ao invés de "connection TCP").
+
 - **Conceptual Accuracy**:
   - **SSE Connection**: Correctly identified as starting with a standard HTTP request where the server maintains the connection open to push data.
   - **WebSocket Connection**: Correctly explained that it starts as an HTTP upgrade request, receives a `101 Switching Protocols` response, reuses the underlying TCP connection, transitions to a binary frame format, and utilizes Ping/Pong keep-alive frames.
