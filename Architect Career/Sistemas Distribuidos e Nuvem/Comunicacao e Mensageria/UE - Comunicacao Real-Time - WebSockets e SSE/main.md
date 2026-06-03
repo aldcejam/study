@@ -1,5 +1,5 @@
 ---
-tema: Comunicação Real-Time - WebSockets e SSE
+tema-ue: Comunicação Real-Time - WebSockets e SSE
 tipo: unidade-estudo
 tags: [real-time, websockets, sse, tcp, concurrencia]
 sequencia:
