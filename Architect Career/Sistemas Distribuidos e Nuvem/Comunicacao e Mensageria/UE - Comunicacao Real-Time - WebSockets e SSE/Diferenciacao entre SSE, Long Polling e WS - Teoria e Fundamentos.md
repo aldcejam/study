@@ -1,7 +1,6 @@
 ---
 tema: Diferenciação entre SSE, Long Polling e WS - Teoria e Fundamentos
-revision_31-05-2026: false
-revision_01-06-2026: false
+revision_01-06-2026: true
 revision_04-06-2026: false
 revision_11-06-2026: false
 revision_25-06-2026: false
@@ -52,9 +51,9 @@ Checklist:
 
 - **Conceptual Accuracy**:
   - **SSE Connection**: Correctly identified as starting with a standard HTTP request where the server maintains the connection open to push data.
-  - **Directionality**: Correctly defined as unidirectional (downlink), allowing the server to push events continuously over time.
+  - **WebSocket Connection**: Correctly explained that it starts as an HTTP upgrade request, receives a `101 Switching Protocols` response, reuses the underlying TCP connection, transitions to a binary frame format, and utilizes Ping/Pong keep-alive frames.
 - **Language Fluency**:
-  - The grammar and vocabulary used are fully appropriate for describing network protocol architectures.
+  - Successfully expressed advanced concepts (e.g., "HTTP upgrade request", "101 status", "reuses the TCP connection", "binary messages", "ping-pong requests") in English.
 
 ---
 ## ❓ Teste-se (Active Recall)
