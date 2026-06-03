@@ -15,15 +15,25 @@ homework:
 ---
 
 ## 📝 Meu Resumo (Feynman)
-Explicar Diferenciação entre SSE, Long Polling e WS - Teoria e Fundamentos em linguagem simples, como se ensinasse a alguém:
+- **WebSockets (WS)**:
+  - **Direcionalidade**: Bidirecional (full-duplex) simultâneo. Tanto cliente quanto servidor transmitem dados a qualquer momento.
+  - **Protocolo**: Inicia via handshake HTTP (`Upgrade: websocket`) e transiciona para o protocolo WebSocket independente sobre TCP (HTTP status `101 Switching Protocols`).
+- **Server-Sent Events (SSE)**:
+  - **Direcionalidade**: Unidirecional (downlink). Apenas o servidor envia dados após a conexão inicial do cliente.
+  - **Protocolo**: Mantém-se sob o protocolo HTTP padrão usando o cabeçalho `Content-Type: text/event-stream` e conexão persistente (`keep-alive`).
 
 ---
 ## 🎤 Explicação em Voz
 
 Checklist:
-* [ ] Gravar explicação (2–5 minutos)
-* [ ] Identificar lacunas
-* [ ] Atualizar resumo
+* [x] Gravar explicação (2–5 minutos)
+* [x] Identificar lacunas
+* [x] Atualizar resumo
+
+### 🔍 Lacunas e Refinamentos Identificados:
+* **WebSocket Handshake**: Detalhar a transição via código HTTP `101 Switching Protocols` e o uso dos cabeçalhos `Upgrade: websocket` e `Connection: Upgrade`.
+* **SSE Headers**: Adicionar a necessidade de cabeçalhos como `Content-Type: text/event-stream` e `Cache-Control: no-cache` para evitar buffering ou cache indesejado.
+* **HTTP/2 Multiplexing**: Entender que o SSE aproveita nativamente o HTTP/2 (evitando o limite de 6 conexões do HTTP/1.1 no navegador), enquanto o WebSocket exige extensões adicionais (como RFC 8441) para rodar sobre HTTP/2.
 
 --- 
 
