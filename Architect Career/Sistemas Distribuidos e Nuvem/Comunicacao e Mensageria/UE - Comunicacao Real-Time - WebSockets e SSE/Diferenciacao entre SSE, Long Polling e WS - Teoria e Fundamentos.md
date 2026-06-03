@@ -47,8 +47,16 @@ Checklist:
 * **SSE Headers**: Adicionar a necessidade de cabeçalhos como `Content-Type: text/event-stream` e `Cache-Control: no-cache` para evitar buffering ou cache indesejado.
 * **HTTP/2 Multiplexing**: Entender que o SSE aproveita nativamente o HTTP/2 (evitando o limite de 6 conexões do HTTP/1.1 no navegador), enquanto o WebSocket exige extensões adicionais (como RFC 8441) para rodar sobre HTTP/2.
 
---- 
+---
+## 🌍 English Explanation Check
 
+- **Conceptual Accuracy**:
+  - **SSE Connection**: Correctly identified as starting with a standard HTTP request where the server maintains the connection open to push data.
+  - **Directionality**: Correctly defined as unidirectional (downlink), allowing the server to push events continuously over time.
+- **Language Fluency**:
+  - The grammar and vocabulary used are fully appropriate for describing network protocol architectures.
+
+---
 ## ❓ Teste-se (Active Recall)
 
 Responda sem consultar o material:
