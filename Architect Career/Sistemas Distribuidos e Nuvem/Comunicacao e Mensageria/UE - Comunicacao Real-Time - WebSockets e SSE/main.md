@@ -35,7 +35,7 @@ Diretrizes de leitura e fundamentação (Padrão MIT/Stanford/CMU/Papers clássi
 
 ## 🗃️ Notas Heutagógicas Atômicas
 *(Links para os arquivos de estudo que serão populados individualmente)*
-- [[./Diferenciacao entre SSE, Long Polling e WS - Teoria e Fundamentos]]
+- [[Diferenciacao entre SSE, Long Polling e WS - Teoria e Fundamentos]]
 - [[./Multiplexacao C10K via epoll e Estrutura dos Frames Binarios - Funcionamento Interno e Arquitetura]]
 - [[./Reconexao em Massa Thundering Herd e Stateful Drops - Casos de Falha e Análise Amortizada]]
 - [[./Implementacao de Milhoes de Sockets Ociosos em ErlangGo - Implementacao de Referencia e Benchmarks]]
