@@ -9,11 +9,10 @@
 * Alternativas de soluções cogitadas; 
 
 👤 *PESSOA 3: Ideação (Alternativas de Solução)*
-* Listar pelo menos **3 opções/funções de alternativas** de solução que consideramos.
-* Embasar a escolha usando a ferramenta **Matriz Função/Necessidade** ou **Spectrum**.
+* Listar pelo menos **3 opções/funções de alternativas** de solução que consideramos
 
 👤 *PESSOA 4: A Decisão
-* Qual o conceito de solução escolhido e o por quê;
+* Qual o conceito de solução escolhido e o por quê (Embasar a escolha usando a ferramenta *Matriz Função/Necessidade* ou *Spectrum*.);
 * Começar a detalhar o que é a solução e como resolve o problema.
 
 👤 *PESSOA 5: Validação Prática (Testes de Mercado)*
@@ -22,3 +21,6 @@
 
 👤 *PESSOA 6: Impacto e Proposta de Valor (O Maior Peso - Vale 1.0pt)*
 * Escrever a **Previsão de Impacto** detalhada da nossa solução
+
+Atualizei, deem uma olhada
+@Yan IMD @~André Vitor @~Gustavo F. @~João Victor Oliveira @~WimoBr - Thierry
