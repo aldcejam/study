@@ -1,0 +1,72 @@
+#deck:AWS::Billing FinOps e Precificacao
+#tags: aws finops billing custo savings-plans spot s3
+
+Qual a máxima central sobre arquitetura e fatura na AWS?	Na nuvem, a arquitetura é a fatura. Decisões técnicas (instância, storage class, transferência) têm custo direto, muitas vezes invisível até o fim do mês.
+Quais os 3 eixos que compõem quase toda precificação AWS?	Compute (tempo/capacidade), Storage (GB + requisições + recuperação) e Data transfer (rede).
+Qual dos 3 eixos de precificação AWS é o mais oculto?	Data transfer (rede) — OUT, cross-AZ, cross-Region, NAT Gateway.
+Data transfer IN (internet → AWS)?	Geralmente grátis.
+Data transfer OUT (AWS → internet)?	Pago, escalonado por volume.
+Data transfer na mesma AZ (IP privado)?	Grátis.
+Data transfer cross-AZ (mesma Region)?	Pago (ambos os sentidos).
+Data transfer cross-Region?	Pago — mais caro que cross-AZ.
+Quais os 3 tipos de Free Tier da AWS?	12 meses grátis (ex.: 750h EC2 t2/t3.micro), always free (ex.: 1M Lambda/mês, 25 GB DynamoDB) e trials (curta duração).
+Trade-off central dos modelos de compra EC2?	Compromisso × preço × flexibilidade.
+Quando usar On-Demand?	Cargas imprevisíveis, curtas, dev/test ou pico temporário — paga por segundo/hora sem compromisso, preço cheio.
+Quando usar Reserved Instances (RI)?	Carga estável e previsível 24/7. Compromisso 1 ou 3 anos, desconto até ~72% vs On-Demand.
+Diferença Standard RI vs Convertible RI?	Standard: maior desconto, menos flexível. Convertible: permite trocar família/SO, desconto menor.
+Opções de pagamento de RI?	All Upfront (maior desconto), Partial Upfront, No Upfront.
+RI vs Savings Plans — qual é mais rígido?	Reserved Instances — mecanismo de billing/capacidade mais rígido que Savings Plans.
+O que são Savings Plans?	Compromisso de valor por hora (USD/h) por 1 ou 3 anos, desconto até ~72%. Recomendado hoje em vez de RI quando se quer flexibilidade.
+Diferença Compute Savings Plans vs EC2 Instance Savings Plans?	Compute SP: flexível — qualquer família/region/SO, Fargate e Lambda (menor desconto). EC2 Instance SP: restrito a uma família em uma region (maior desconto).
+Quando usar Spot Instances?	Cargas tolerantes a interrupção e stateless: batch, CI/CD, big data, rendering, workloads com checkpoint. Desconto até ~90%.
+Quando NÃO usar Spot?	Estado crítico que não tolera término abrupto (salvo estratégias de resiliência).
+Qual o aviso de interrupção do Spot?	2 minutos antes da AWS recuperar a instância.
+O que são Dedicated Hosts / Dedicated Instances?	Hardware físico dedicado — compliance e licenças BYOL amarradas a socket/core.
+O que são Capacity Reservations?	Garantem capacidade em uma AZ sem compromisso de prazo. Podem combinar com Savings Plans para desconto.
+Estratégia combinada ("layered") de modelos de compra?	Baseline 24/7 em Savings Plans/RIs + picos em On-Demand + batch tolerante em Spot.
+Comparativo: On-Demand — desconto, compromisso, interrupção?	0% desconto, nenhum compromisso, sem interrupção.
+Comparativo: Spot — desconto, compromisso, interrupção?	Até ~90% desconto, nenhum compromisso, sim (aviso 2 min).
+Por que NAT Gateway infla a fatura?	Cobra por hora + por GB processado. Muito tráfego por ele é caro.
+Como reduzir custo de acesso a serviços AWS dentro da VPC?	VPC Endpoints / PrivateLink — reduzem saída pela internet.
+Servir mídia: S3 direto vs CloudFront?	S3 direto para internet é mais caro. CloudFront reduz custo de saída.
+Armadilha comum de arquitetura multi-AZ mal pensada?	Tráfego cross-AZ entre serviços em AZs diferentes infla a fatura.
+O que o S3 cobra além de armazenamento?	Requisições, recuperação e transição entre classes.
+Quando usar S3 Standard?	Acesso frequente — maior custo de storage, sem taxa de recuperação.
+Quando usar S3 Intelligent-Tiering?	Padrão de acesso desconhecido ou variável — move automaticamente entre tiers, sem taxa de recuperação surpresa (+ taxa de monitoramento).
+Quando usar S3 Standard-IA?	Acesso infrequente, mas precisa de acesso rápido — paga por GB recuperado.
+Quando usar S3 One Zone-IA?	Acesso infrequente em 1 só AZ — dados recriáveis, custo ainda menor que Standard-IA.
+Quando usar S3 Glacier Instant Retrieval?	Arquivo com acesso raro, mas recuperação instantânea (ms).
+Quando usar S3 Glacier Flexible Retrieval?	Arquivo — recuperação em minutos a 12 horas, custo muito baixo.
+Quando usar S3 Glacier Deep Archive?	Arquivamento de longuíssimo prazo (7–10 anos) — menor custo, recuperação 12–48h.
+O que faz uma S3 Lifecycle policy?	Automatiza transição entre classes e expiração de objetos (ex.: Standard → IA 30d → Glacier 90d → delete 365d).
+Como o EBS cobra?	Por GB provisionado (não usado) por mês + IOPS/throughput conforme tipo (gp3, io2). Snapshots vão para S3 com cobrança incremental.
+Para que serve o AWS Cost Explorer?	Visualização interativa e histórica (12+ meses) de custo/uso, previsões, filtros por serviço/tag/region. Recomenda rightsizing e Savings Plans.
+Para que serve o AWS Budgets?	Orçamentos de custo/uso/RI/SP utilization com alertas (e-mail/SNS) ao ultrapassar limites reais ou previstos.
+O que são Budget Actions?	Ações automáticas ao estourar orçamento — ex.: anexar policy restritiva, parar instâncias.
+Para que serve o Cost and Usage Report (CUR)?	Relatório mais detalhado (linha por hora/recurso), entregue no S3. Base para Athena, QuickSight e FinOps avançado.
+O que são cost allocation tags?	Tags chave/valor para atribuir custo por projeto, time, ambiente. Precisam ser ativadas no billing para aparecer no Cost Explorer/CUR.
+Tipos de cost allocation tags?	AWS-generated (ex.: aws:createdBy) e user-defined.
+O que é showback vs chargeback?	Showback: mostrar o custo ao time. Chargeback: cobrar o custo do time.
+O que é Consolidated Billing via Organizations?	Múltiplas contas sob management account com fatura única. Volume discounts agregados, compartilhamento de RIs/Savings Plans, isolamento por conta, SCPs.
+Boa prática de estrutura de contas para billing?	Conta separada por ambiente/time; billing centralizado na management account.
+Para que serve o AWS Compute Optimizer?	Recomenda rightsizing de EC2/EBS/Lambda/Auto Scaling com base em métricas reais de uso.
+Trusted Advisor — checks de custo?	Instâncias ociosas, RIs subutilizadas, Elastic IPs ociosos.
+Para que serve o Cost Anomaly Detection?	ML que detecta picos anômalos de gasto e alerta automaticamente.
+O que é rightsizing?	Ajustar tamanho/capacidade dos recursos ao uso real — não pagar por capacidade ociosa.
+7 alavancas principais de otimização FinOps?	Rightsizing, elasticidade/desligamento, modelo de compra certo, serverless, storage tiering, reduzir data transfer, governança contínua.
+Por que serverless (Lambda/Fargate) ajuda em custo variável?	Cobra só pelo uso — ideal para cargas intermitentes, evita pagar servidor ocioso.
+Ciclo FinOps: fase Inform?	Visibilidade — Cost Explorer, tags, dashboards, showback. Todos veem o custo do que criam.
+Ciclo FinOps: fase Optimize?	Ação — rightsizing, Savings Plans, Spot, lifecycle S3, storage tiering.
+Ciclo FinOps: fase Operate?	Institucionalizar — budgets, políticas, anomaly detection, responsabilização por time.
+Princípio FinOps central?	Custo é responsabilidade de todos (eng + finanças + negócio). Decisões orientadas por dados de negócio. Times donos do gasto respondem pelo uso.
+Carga 24/7 previsível — qual modelo de compra?	Savings Plans ou Reserved Instances.
+Pico curto e imprevisível — qual modelo?	On-Demand.
+Batch tolerante a interrupção — qual modelo?	Spot.
+Padrão de acesso S3 desconhecido — qual classe?	S3 Intelligent-Tiering.
+Arquivamento longuíssimo prazo — qual classe?	S3 Glacier Deep Archive.
+Alerta ao estourar orçamento — qual ferramenta?	AWS Budgets (+ Actions).
+Atribuir custo por time/projeto — qual ferramenta?	Cost Allocation Tags + Cost Explorer.
+Análise por recurso, nível de linha — qual ferramenta?	Cost and Usage Report (CUR).
+Detectar gasto anômalo — qual ferramenta?	Cost Anomaly Detection.
+Recomendação de tamanho ideal de instância — qual ferramenta?	AWS Compute Optimizer.
+Várias contas, fatura única, descontos agregados — qual serviço?	AWS Organizations + Consolidated Billing.

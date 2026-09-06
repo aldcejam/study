@@ -1,0 +1,3 @@
+- single responsability
+- open close
+- 

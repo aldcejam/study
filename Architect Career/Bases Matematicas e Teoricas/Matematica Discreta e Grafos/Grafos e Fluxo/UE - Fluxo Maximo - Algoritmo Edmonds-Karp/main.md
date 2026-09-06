@@ -9,6 +9,9 @@ tags: [matematica, algoritmos, grafos]
 > [!NOTE]
 > O problema de fluxo máximo resolve gargalos de **capacidade de transporte** em redes. Seja para otimizar a largura de banda em uma rede de computadores, o fluxo de logística em uma cadeia de suprimentos ou até o balanceamento de carga em sistemas distribuídos, ignorar a teoria de fluxo leva a subutilização de recursos ou saturação catastrófica de links críticos. Sem Edmonds-Karp (ou Ford-Fulkerson), você não consegue garantir o limite teórico de dados que podem atravessar um sistema complexo.
 
+## 📖 Material Teórico Aprofundado
+- [[./aula|👉 Acessar Apostila / Aula Completa desta UE]]
+
 ## 🧬 Grade Atômica de Tópicos
 Para dominar esta UE, é obrigatório esgotar os seguintes sub-conceitos fundamentais:
 1. **[Rede de Fluxo e Capacidade]:** Entender a definição formal de uma rede de fluxo, as leis de conservação e as restrições de capacidade.

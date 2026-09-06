@@ -1,0 +1,7 @@
+- [x] Configurar Config server para Eureka
+- [x] Configurar Config server para ERP 
+- [x] Fazer CRUD de cronograma no ERP
+- [x] Validar registro de serviços no Gateway
+- [x] Enviar pelo ERP uma REQ para o AI service
+- [x] Enviar uma REQ para o AI service
+- [ ] Testar banco vetorial

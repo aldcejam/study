@@ -1,0 +1,84 @@
+#deck:AWS::01 - Fundamentos e Well-Architected
+#tags: aws fundamentos well-architected iam billing finops infra global
+
+Quais são os três fundamentos que toda decisão arquitetural na AWS parte?	Onde a computação roda (infra global/domínios de falha), quem pode fazer o quê (IAM/responsabilidade compartilhada) e como avaliar se o design é bom (Well-Architected Framework).
+Qual a hierarquia de isolamento de falha da AWS (do maior para o menor)?	Partition → Region → Availability Zone → Data Center.
+O que é uma AWS Region?	Área geográfica isolada com no mínimo 3 AZs; limite de isolamento, soberania de dados e fronteira regulatória.
+O que é uma Availability Zone (AZ)?	Conjunto de 1+ data centers com energia, refrigeração e rede independentes, conectados por links de baixa latência (< 1–2 ms) dentro da mesma Region.
+Qual a latência típica entre AZs da mesma Region?	Single-digit millisecond, tipicamente < 1–2 ms round-trip.
+Por que a latência < 2 ms entre AZs viabiliza replicação síncrona?	Porque o RTT é baixo o suficiente para quorum de escrita síncrono (ex.: RDS Multi-AZ). Entre Regions a latência força replicação assíncrona, introduzindo RPO > 0.
+Qual a diferença entre AZ name e AZ ID?	O name (ex.: us-east-1a) pode mapear para data centers diferentes entre contas (AWS embaralha). O AZ ID (ex.: use1-az1) é o identificador físico estável entre contas.
+Classifique: EC2 instance, S3, IAM, CloudFront — zonal, regional ou global?	EC2 = zonal. S3 = regional. IAM = global. CloudFront = global (rede de borda).
+O que acontece se uma AZ cai e sua aplicação usa apenas recursos zonais nela?	Indisponibilidade total desses recursos (ex.: EC2 + EBS nessa AZ).
+O que é blast radius?	Alcance de impacto de uma falha. Bom design o minimiza (ex.: cell-based architecture).
+Quando escolher multi-AZ vs multi-Region?	Multi-AZ: alta disponibilidade com RPO≈0 na mesma Region. Multi-Region: disaster recovery geográfico, sobreviver à perda de uma Region inteira (replicação assíncrona).
+O que é um Edge Location (PoP)?	Site de borda (centenas globalmente) para cache, DNS, terminação TLS e mitigação DDoS — muito mais numeroso que Regions.
+Quais serviços terminam conexões nos Edge Locations?	CloudFront (CDN), Route 53 (DNS), Global Accelerator (TCP/UDP), WAF/Shield (DDoS).
+Diferença entre CloudFront e Global Accelerator?	CloudFront: HTTP(S) cacheável (conteúdo). Global Accelerator: qualquer TCP/UDP não-cacheável (jogos, IoT, VoIP, APIs) com IPs Anycast estáticos.
+O que é Regional Edge Cache?	Camada intermediária entre Edge Locations e a origem; cacheia objetos menos populares para reduzir idas à origem.
+O que é AWS Local Zone?	Extensão de uma Region dentro de uma metrópole para latência single-digit ms (gaming, vídeo, ML inference). Subconjunto de serviços.
+O que é AWS Wavelength?	Infraestrutura AWS embarcada na rede 5G da operadora para latência ultrabaixa em dispositivos móveis sem sair da rede da telecom.
+O que é AWS Outposts?	Rack(s) de hardware AWS instalado no data center do cliente, gerenciado pela AWS com mesma API. Para residência de dados e híbrido.
+Mnemônico: Local Zone vs Wavelength vs Outposts?	Local Zone = cidade. Wavelength = 5G/telecom. Outposts = AWS no seu rack.
+Diferença IaaS vs PaaS vs SaaS na AWS (exemplos)?	IaaS: EC2, EBS, VPC (você gerencia SO+). PaaS: RDS, Lambda, Beanstalk (AWS gerencia SO/runtime). SaaS: WorkMail, Chime (você gerencia só dados/uso).
+O que é "Security OF the Cloud" vs "Security IN the Cloud"?	OF = AWS (hardware, data centers, hypervisor, infra dos serviços gerenciados). IN = cliente (dados, IAM, criptografia, SGs, configuração).
+Três responsabilidades que SEMPRE são do cliente, em qualquer serviço?	(1) Dados (classificação, criptografia, backup lógico). (2) Identidade e acesso (IAM). (3) Configuração (SGs, buckets públicos/privados, políticas de rede).
+No RDS, quem patcha o SO?	A AWS (RDS é PaaS).
+No EC2, quem patcha o SO?	O cliente (EC2 é IaaS).
+No Lambda, o que o cliente gerencia?	Só o código e permissões (IAM). AWS gerencia SO e runtime.
+Quais são os 6 pilares do Well-Architected Framework?	Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization, Sustainability.
+O que o pilar Operational Excellence otimiza?	Capacidade de executar, monitorar e melhorar operações continuamente (IaC, automação, observabilidade, runbooks, game days).
+O que o pilar Security otimiza?	Proteção de dados, sistemas e ativos (IAM, criptografia, CloudTrail, defense in depth).
+O que o pilar Reliability otimiza?	Funcionar corretamente e se recuperar de falhas (multi-AZ, Auto Scaling, backups testados, RTO/RPO).
+O que o pilar Performance Efficiency otimiza?	Uso eficiente de recursos computacionais (tipo certo de instância, cache, serverless, multi-Region).
+O que o pilar Cost Optimization otimiza?	Entregar valor pelo menor custo (Savings Plans, Spot, tags, Cost Explorer, rightsizing).
+O que o pilar Sustainability otimiza?	Minimizar impacto ambiental (alta utilização, Graviton, serverless, regions eficientes). Adicionado em 2021.
+Trade-off: Reliability × Cost Optimization?	Multi-Region active-active (alta disponibilidade) vs single-Region (mais barato).
+Trade-off: Performance × Consistência?	Cache/réplicas de leitura (rápido) vs leitura fortemente consistente (mais lento).
+Enunciado diz "regardless of cost / must not lose data" — qual pilar priorizar?	Reliability (multi-AZ/Region, RPO 0).
+Enunciado diz "most cost-effective" — qual pilar priorizar?	Cost Optimization (Spot, serverless, S3 tiers).
+Enunciado diz "least operational overhead / fully managed" — qual pilar?	Operational Excellence (serverless, managed services).
+O que é WAFR (Well-Architected Review)?	Processo estruturado de avaliar uma workload contra as perguntas dos pilares; gera HRIs e MRIs com melhorias priorizadas.
+O que é HRI vs MRI?	High Risk Issue vs Medium Risk Issue — riscos identificados na revisão Well-Architected.
+O que é uma Lens no Well-Architected?	Extensão do framework para domínios específicos (Serverless, SaaS, ML, IoT, etc.) com perguntas adicionais.
+Diferença entre WA Tool e Trusted Advisor?	WA Tool: avalia o design da workload (perguntas por pilar). Trusted Advisor: inspeciona o estado real da conta e dá recomendações automáticas.
+Quais categorias o Trusted Advisor cobre?	Cost Optimization, Performance, Security, Fault Tolerance (Reliability), Service Limits.
+O que significa "stop guessing capacity"?	Usar elasticidade para escalar sob demanda em vez de super/subdimensionar capacidade fixa.
+O que é undifferentiated heavy lifting?	Trabalho de infra que não diferencia o negócio (patching, racking, scaling manual) — a nuvem elimina.
+O que é um game day?	Simulação planejada de falha ou pico de carga para treinar a resposta operacional.
+Quais ações são exclusivas do root user?	Fechar conta, alterar plano de suporte, restaurar permissões IAM revogadas, configurar billing raiz, MFA Delete no S3.
+Regra de ouro para o root user?	Ativar MFA, guardar credenciais em cofre, NUNCA usar no dia a dia. Criar user/role admin para operação.
+Diferença entre IAM User e IAM Role?	User: credenciais permanentes (senha + access keys). Role: credenciais temporárias via STS, assumida por trust policy.
+Por que roles são preferíveis a access keys?	Credenciais temporárias (minutos/horas), rotacionadas automaticamente. Se vazarem, expiram. Access keys são permanentes até revogação manual.
+O que é uma IAM Group?	Coleção de users para atribuir políticas em massa. Não é identidade — não faz login, não pode ser Principal.
+Quais os dois componentes de uma IAM Role?	Trust policy (quem pode assumir — Principal) e Permission policy (o que pode fazer uma vez assumida).
+O que é STS (Security Token Service)?	Serviço que emite credenciais temporárias ao assumir uma role (AssumeRole).
+Ordem de avaliação de permissões IAM?	1) Deny explícito → NEGADO (sempre vence). 2) Sem Allow explícito → NEGADO (deny implícito). 3) Allow explícito sem Deny → PERMITIDO.
+User tem Allow s3:* mas SCP tem Deny s3:DeleteBucket. Resultado?	Pode listar, ler, escrever — mas NÃO deletar bucket. Deny explícito do SCP vence qualquer Allow.
+Diferença identity-based vs resource-based policy?	Identity-based: anexada a user/group/role, SEM Principal. Resource-based: anexada ao recurso (S3, SQS, KMS), COM Principal (habilita cross-account).
+O que é uma Permissions Boundary?	Teto máximo de permissões de uma identidade. Previne escalonamento de privilégio ao delegar criação de users.
+O que é uma SCP (Service Control Policy)?	Teto de permissões aplicado a contas inteiras via Organizations. Não concede — apenas limita.
+O que é IAM Access Analyzer?	Detecta recursos expostos externamente e gera policies de menor privilégio a partir de logs do CloudTrail.
+Quais os 3 eixos da precificação AWS?	Compute, Storage, Data transfer. O mais oculto: data transfer (OUT, cross-AZ, cross-Region, NAT Gateway).
+Data transfer: o que é grátis vs pago?	IN (internet → AWS) = grátis. OUT (AWS → internet) = pago. Cross-AZ = pago. Cross-Region = pago (mais caro). Mesma AZ via IP privado = grátis.
+Quando usar On-Demand?	Cargas imprevisíveis, curtas, dev/test, picos temporários — sem compromisso, preço cheio.
+Quando usar Savings Plans?	Baseline previsível 24/7 com flexibilidade. Compromisso de $/h por 1 ou 3 anos, desconto até ~72%.
+Diferença Compute Savings Plans vs EC2 Instance Savings Plans?	Compute SP: flexível (qualquer família/region/SO, Fargate, Lambda). EC2 Instance SP: restrito a uma família em uma region, maior desconto.
+Quando usar Reserved Instances?	Carga estável e previsível 24/7 por 1 ou 3 anos. Mais rígido que Savings Plans.
+Quando usar Spot Instances?	Cargas tolerantes a interrupção e stateless (batch, CI/CD, big data). Desconto até ~90%, mas AWS pode recuperar com aviso de 2 minutos.
+Estratégia combinada de modelos de compra?	Baseline em Savings Plans/RIs + picos em On-Demand + batch tolerante em Spot.
+Por que NAT Gateway pode inflar a fatura?	Cobra por hora + por GB processado. Mover muito tráfego por ele é caro; VPC Endpoints podem substituir para serviços AWS.
+Qual classe S3 para padrão de acesso desconhecido/variável?	S3 Intelligent-Tiering — move objetos automaticamente entre tiers sem taxa de recuperação surpresa.
+Qual classe S3 para arquivamento de longuíssimo prazo (7–10 anos)?	S3 Glacier Deep Archive — menor custo, recuperação em 12–48h.
+O que faz uma S3 Lifecycle policy?	Automatiza transição entre classes e expiração de objetos (ex.: Standard → IA após 30d → Glacier após 90d → delete após 365d).
+Diferença Cost Explorer vs Budgets vs CUR?	Cost Explorer: visualização histórica e previsão. Budgets: orçamentos com alertas/ações automáticas. CUR: relatório mais granular (linha por hora/recurso) no S3.
+O que são cost allocation tags?	Tags (chave/valor) para atribuir custo por projeto/time/ambiente. Precisam ser ativadas no billing. Base para showback/chargeback.
+O que é Consolidated Billing via Organizations?	Fatura única para múltiplas contas, volume discounts agregados, compartilhamento de RIs/Savings Plans, isolamento por conta.
+Ciclo FinOps: Inform → Optimize → Operate?	Inform: visibilidade (Cost Explorer, tags). Optimize: rightsizing, Savings Plans, Spot, lifecycle. Operate: budgets, políticas, anomaly detection, cultura.
+O que é showback vs chargeback?	Showback: mostrar o custo ao time. Chargeback: cobrar o custo do time.
+O que é rightsizing?	Ajustar tamanho/capacidade dos recursos ao uso real (Compute Optimizer).
+Cliente precisa manter dados fisicamente na própria fábrica por regulação. Qual extensão?	AWS Outposts — hardware AWS no data center do cliente.
+Latência ultrabaixa para usuários de uma cidade específica?	AWS Local Zone.
+Latência ultrabaixa para dispositivos 5G sem sair da rede da operadora?	AWS Wavelength.
+Entregar conteúdo estático global com baixa latência?	CloudFront (Edge Locations).
+Acelerar TCP/UDP não-cacheável globalmente?	AWS Global Accelerator.

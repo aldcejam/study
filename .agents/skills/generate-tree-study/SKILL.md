@@ -59,6 +59,9 @@ tags: [computacao, sistemas, arquitetura]
 > [!NOTE]
 > [Explique o problema de engenharia real de nível crítico que este conceito resolve. Que tipo de quebra, gargalo de infraestrutura, race condition, estouro de memória ou falha de consenso acontece se o engenheiro ignorar as propriedades deste tópico?]
 
+## 📖 Material Teórico Aprofundado
+- [[./aula|👉 Acessar Apostila / Aula Completa desta UE]]
+
 ## 🧬 Grade Atômica de Tópicos
 Para dominar esta UE, é obrigatório esgotar os seguintes sub-conceitos fundamentais:
 1. **[Sub-conceito 1 - Fundamento Teórico]:** [Detalhamento de 2 linhas sobre o modelo matemático, invariante ou teorema por trás].

@@ -16,3 +16,4 @@ Exploramos a física dos sistemas (relógios, consenso) e a engenharia de nuvem 
 - [[./Comunicacao e Mensageria/main|Comunicacao e Mensageria]] -> HTTP/3, gRPC, Message Brokers e Kafka.
 - [[./Resiliencia e Confiabilidade/main|Resiliencia e Confiabilidade]] -> Circuit Breaker, Retries, Teoremas CAP e PACELC.
 - [[./Observabilidade Plena e DevOps/main|Observabilidade Plena e DevOps]] -> Métricas (Prometheus), SRE (SLOs) e GitOps.
+- [[./AWS/main|AWS]] -> Nuvem AWS ponta a ponta: rede, computação, dados, segurança e DevOps rumo às certificações Professional.
